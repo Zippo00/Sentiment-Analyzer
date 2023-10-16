@@ -1,0 +1,3 @@
+sentistrength
+sqlite3
+pandas
