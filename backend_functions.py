@@ -25,7 +25,6 @@ def store_sent_score(csv_filepath, db_table, db):
     query = f"INSERT INTO {db_table} VALUES "
     #Iterate through the scores & reviews, adding each (positive score, negative score, overall score) -data entry into given database
     for index, score in enumerate(scores):
-        #print(f'TEXT:\n{text}\nSENTIMENT SCORE: {score}')
         query += f"""({score[0]}, {score[1]}, {score[0]+score[1]}), """
     #Remove final comma and space from the query.
     query = query[:-2]
