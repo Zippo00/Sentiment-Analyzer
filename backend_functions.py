@@ -34,4 +34,4 @@ def store_sent_score(csv_filepath, db_table, db):
 
 
 if __name__ == '__main__':
-    store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
+    #store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
