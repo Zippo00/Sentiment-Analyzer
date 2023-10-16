@@ -23,13 +23,13 @@ def store_sent_score(csv_filepath, db_table, db):
     scores = sent_str.getSentiment(reviews, score='dual')
     #print(scores)
     query = f"INSERT INTO {db_table} VALUES "
-    #Iterate through the scores & reviews, adding each (review, positive score, negative score, overall score) -data entry into given database
+    #Iterate through the scores & reviews, adding each (positive score, negative score, overall score) -data entry into given database
     for index, score in enumerate(scores):
         #print(f'TEXT:\n{text}\nSENTIMENT SCORE: {score}')
-        #print(f'({type(reviews[index])}, {type(score[0])}, {type(score[1])}, {type(score[0]+score[1])})')
         query += f"""({score[0]}, {score[1]}, {score[0]+score[1]}), """
     #Remove final comma and space from the query.
     query = query[:-2]
+    #Execute query
     datahandling.sql_execute(query, db)
 
 
