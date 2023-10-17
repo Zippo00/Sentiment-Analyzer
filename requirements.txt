@@ -1,3 +1,8 @@
 sentistrength
 sqlite3
 pandas
+flask
+Flask
+turbo_flask
+plotly
+json
