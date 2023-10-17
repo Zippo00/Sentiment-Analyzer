@@ -31,27 +31,34 @@
 
             <!--Selection menu to pull data from a certain dataset-->
             <div>
-                <div class="select" style="display: inline-flex;">
+                <h4 style="margin-bottom: 0px;color: white;">Select Dataset:</h4>
+                <div class="select" style="display: inline-flex; width: 15em;">
                     <select name="dataset" id="dataset">   
                         <option value="hotel_reviews" selected>London Hotel Reviews</option>
                     </select>
                 </div>
             </div>
             <!-- Selection menu to pick calculations to calculate-->
-            <div class="select" style="display: inline-flex; width: 10em;">
-                <select name="calculation" id="calculation">
-                    <option value="pearson" selected>Pearson's Correlation</option>
-                    <option value="statistics">Statistics</option>
-                </select>
+            <div>
+                <h4 style="margin-bottom: 0px;color: white;">Select Calculations to Perform:</h4>
+                <div class="select" style="display: inline-flex; width: 15em;">
+                    <select name="calculation" id="calculation">
+                        <option value="pearson" selected>Pearson's Correlation</option>
+                        <option value="statistics">Statistics</option>
+                    </select>
+                </div>
             </div>
             <!-- Button to calculate the selected calculations -->
             <button class="button-64" type="submit" style="display: inline-flex;" onClick="updateCalcs()"><span class="text">Calculate</span></button>
             <!-- Selection menu to pick a graph to plot-->
-            <div class="select" style="display: inline-flex; width: 10em;">
-                <select name="graphToPlot" id="graphToPlot">
-                    <option value="sentistr" selected>SentiStrength Histogram</option>
-                    <option value="categoryHistogram">Category Frequency Histogram</option>
-                </select>
+            <div>
+                <h4 style="margin-bottom: 0px;color: white;">Select a Graph to Plot:</h4>
+                <div class="select" style="display: inline-flex; width: 20em;">
+                    <select name="graphToPlot" id="graphToPlot">
+                        <option value="sentistr" selected>SentiStrength Histogram</option>
+                        <option value="categoryHistogram">Category Frequency Histogram</option>
+                    </select>
+                </div>
             </div>
             <!--Update Graph Button-->
             <button class="button-64" type="submit" style="display: inline-flex;" onClick="plotGraph()"><span class="text">Update Graph</span></button>
