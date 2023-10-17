@@ -43,6 +43,7 @@ def fetch_data(table, db, query=None):
     Fetch a certain table from SQLite Database.
     :param table: (str) Name of the table to fetch.
     :param db: (str) Database to use e.g. 'mnemos.db'
+    :(Optional) param query: (str) Optional query to execute. If None, fetches all data from the given table.
     :return: Database Table.
     '''
     try:
