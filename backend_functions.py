@@ -36,10 +36,9 @@ def store_sent_score(csv_filepath, db_table, db):
 
 # correlation of the overall sentiment score of each review with the user’s rating
 def correlation_coefficient(csv_filepath, db_table, db):
-    conn = sqlite3.connect(db)
-    query = f"SELECT overall_score FROM {db_table}"
-    df_overall_score = pd.read_sql_query(query, conn)
-    overall_sentiment_score = df_overall_score.tolist()
+    scores = datahandling.fetch_data('raw_sentiment_score','raw_sentiment_score.db')
+
+    overall_sentiment_score = [score[2] for score in scores]
 
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     user_review_rating = df['Review Rating'].tolist()
