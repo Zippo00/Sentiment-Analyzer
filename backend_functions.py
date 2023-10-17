@@ -1,9 +1,12 @@
 '''
 Functions for Review Sentiment Analyzer
 '''
+import sqlite3
+
 import pandas as pd
 from sentistrength import PySentiStr
 import datahandling
+from scipy import stats
 
 
 def store_sent_score(csv_filepath, db_table, db):
@@ -31,7 +34,23 @@ def store_sent_score(csv_filepath, db_table, db):
     #Execute query
     datahandling.sql_execute(query, db)
 
+# correlation of the overall sentiment score of each review with the user’s rating
+def correlation_coefficient(csv_filepath, db_table, db):
+    conn = sqlite3.connect(db)
+    query = f"SELECT overall_score FROM {db_table}"
+    df_overall_score = pd.read_sql_query(query, conn)
+    overall_sentiment_score = df_overall_score.tolist()
+
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    user_review_rating = df['Review Rating'].tolist()
+
+
+    correlation_coefficient = stats.pearsonr(overall_sentiment_score, user_review_rating)
+    print(correlation_coefficient)
+
+    return correlation_coefficient
+
 
 if __name__ == '__main__':
-    #store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
+    # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
     pass
