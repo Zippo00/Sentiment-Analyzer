@@ -6,7 +6,9 @@ import sqlite3
 import pandas as pd
 from sentistrength import PySentiStr
 import datahandling
+import subprocess
 from scipy import stats
+
 
 
 def store_sent_score(csv_filepath, db_table, db):
@@ -36,7 +38,7 @@ def store_sent_score(csv_filepath, db_table, db):
 
 # correlation of the overall sentiment score of each review with the user’s rating
 def correlation_coefficient(csv_filepath, db_table, db):
-    scores = datahandling.fetch_data('raw_sentiment_score','raw_sentiment_score.db')
+    scores = datahandling.fetch_data(db_table,db)
 
     overall_sentiment_score = [score[2] for score in scores]
 
@@ -48,6 +50,39 @@ def correlation_coefficient(csv_filepath, db_table, db):
     print(correlation_coefficient)
 
     return correlation_coefficient
+
+def group_reviews_by_hotel(csv_filepath):
+    df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
+    # Group reviews by the hotel name and collect reviews in a list
+    grouped_reviews = df.groupby('Property Name')['Review Text'].apply(list)
+    sentiment_scores = {}
+    for hotel_name, reviews in grouped_reviews.items():
+        # Apply sentiment analysis to the list of reviews for each hotel
+        sentiment_scores[hotel_name] = analyze_sentiment(reviews)
+
+
+
+# This function should return sentiment scores
+def analyze_sentiment(reviews):
+    sentiment_scores = []
+
+    # Path to the Sentistrength JAR file and the SentiStrength data folder
+    sentistrength_jar = 'F:/GitStuff/Sentiment-Analyzer/SentiStrength/SentiStrengthCom.jar'
+    sentistrength_data = 'F:/GitStuff/Sentiment-Analyzer/SentiStrength/SentStrength_Data_Sept2011/'
+
+    for review in reviews:
+        # we have to format the text appropriately for Sentistrength (e.g., remove special characters)
+        # Then, call Sentistrength using subprocess
+        command = ['java', '-jar', sentistrength_jar, 'sentidata', sentistrength_data, 'text', review]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        # Extract the sentiment score from the result
+        sentiment_score = int(result.stdout.strip())
+
+        sentiment_scores.append(sentiment_score)
+
+    return sentiment_scores
+
 
 
 if __name__ == '__main__':
