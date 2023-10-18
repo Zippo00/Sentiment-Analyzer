@@ -97,11 +97,55 @@ def construct_histogram_for_star_categories(csv_filepath):
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
     plt.show()
 
+def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
+
+    # Load your dataset into a DataFrame (replace 'your_dataset.csv' with your dataset)
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+
+    # Set the standard deviation threshold for the Ambiguous Class
+    std_deviation_threshold = 1.0
+
+    # Group reviews by hotel and calculate standard deviation
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+
+    # Identify hotels in the Ambiguous Class
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+
+    # Create a list to store classification results
+    classification_results = []
+
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+        if len(positive_reviews) > len(negative_reviews):
+            subclass = 'Positive'
+        else:
+            subclass = 'Negative'
+
+        classification_results.append({'Hotel': hotel, 'Ambiguous': 'Yes', 'Subclass': subclass})
+
+    # Create a DataFrame to store the classification results
+    D1 = pd.DataFrame(classification_results)
+
+    # Create a histogram to visualize the proportion of positive and negative subclasses in the Ambiguous Class
+    subclass_proportions = D1['Subclass'].value_counts()
+    subclass_proportions.plot(kind='bar')
+
+    plt.xlabel("Subclass")
+    plt.ylabel("Proportion of Hotels")
+    plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
+    plt.show()
+
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
     correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
     group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
+    proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
 
 
