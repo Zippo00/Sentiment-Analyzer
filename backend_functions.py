@@ -99,19 +99,14 @@ def construct_histogram_for_star_categories(csv_filepath):
 
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
 
-    # Load your dataset into a DataFrame (replace 'your_dataset.csv' with your dataset)
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
-
-    # Set the standard deviation threshold for the Ambiguous Class
     std_deviation_threshold = 1.0
-
-    # Group reviews by hotel and calculate standard deviation
     hotel_stats = df.groupby('Property Name')['Review Rating'].std()
 
     # Identify hotels in the Ambiguous Class
     ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
 
-    # Create a list to store classification results
+    # List to store classification results
     classification_results = []
 
     for hotel in ambiguous_class_hotels:
@@ -128,10 +123,10 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
         classification_results.append({'Hotel': hotel, 'Ambiguous': 'Yes', 'Subclass': subclass})
 
-    # Create a DataFrame to store the classification results
+    # DataFrame to store the classification results
     D1 = pd.DataFrame(classification_results)
 
-    # Create a histogram to visualize the proportion of positive and negative subclasses in the Ambiguous Class
+    # Histogram to visualize the proportion of positive and negative subclasses in the Ambiguous Class
     subclass_proportions = D1['Subclass'].value_counts()
     subclass_proportions.plot(kind='bar')
 
