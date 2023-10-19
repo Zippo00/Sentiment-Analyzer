@@ -12105,7 +12105,7 @@ select::-ms-expand {
   transition:.25s all ease;
 }
 .select:hover::after {
-  color: #fcd32b;
+  color: #66cc00;
 }
 /*Update Chart Button*/
 /*
@@ -12113,12 +12113,13 @@ select::-ms-expand {
 /* CSS */
 .button-64 {
   align-items: center;
-  background-image: linear-gradient(144deg,#fcd32b, #33aba7 50%,#772bad);
+  background-image: linear-gradient(144deg,#66cc00, #6C6C6C 50%,#66cc00);
+  /*background-image: linear-gradient(144deg,#fcd32b, #33aba7 50%,#772bad);*/
   border: 0;
   border-radius: 0.25em;
   box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
   box-sizing: border-box;
-  color: #FFFFFF;
+  color: #66cc00;
   display: flex;
   font-family: Phantomsans, sans-serif;
   font-size: 1em;
@@ -15074,4 +15075,10 @@ input:-internal-autofill-selected {
   right: auto;
   left: -40px;
   border-radius: 4px 0px 0px 4px;
+}
+
+.terminal {
+  background-color: black;
+  color: #66cc00;
+  font-size: 18px;
 }

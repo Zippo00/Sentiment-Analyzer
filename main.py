@@ -22,7 +22,7 @@ def plot_graph():
     #fig = 
     #graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
     #return graphJSON
-    pass
+    return 0
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
