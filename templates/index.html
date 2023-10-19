@@ -43,8 +43,13 @@
                 <h4 style="margin-bottom: 0px;color: white;">Select Calculations to Perform:</h4>
                 <div class="select" style="display: inline-flex; width: 15em;">
                     <select name="calculation" id="calculation">
-                        <option value="pearson" selected>Pearson's Correlation</option>
-                        <option value="statistics">Statistics</option>
+                        <option value="task2" selected>Pearson's Correlation</option>
+                        <option value="task3">Statistics</option>
+                        <option value="task6">Task 6.</option>
+                        <option value="task7">Task 7.</option>
+                        <option value="task8">Task 8.</option>
+                        <option value="task9">Task 9.</option>
+                        <option value="task12">Task 12.</option>
                     </select>
                 </div>
             </div>
@@ -55,8 +60,10 @@
                 <h4 style="margin-bottom: 0px;color: white;">Select a Graph to Plot:</h4>
                 <div class="select" style="display: inline-flex; width: 20em;">
                     <select name="graphToPlot" id="graphToPlot">
-                        <option value="sentistr" selected>SentiStrength Histogram</option>
-                        <option value="categoryHistogram">Category Frequency Histogram</option>
+                        <option value="task3" selected>Task 3.</option>
+                        <option value="task4">Task 4.</option>
+                        <option value="task5">Task 5.</option>
+                        <option value="task4">Task 11.</option>
                     </select>
                 </div>
             </div>
@@ -65,15 +72,17 @@
             <!--Graph element-->
             <turbo-frame id="turboGraph">
                 <div style="margin-top: 0px;">
-                    <div id='graph1' class="fullscreen-chart justify-content-center" style="margin-bottom: 80px;position: relative">
+                    <div id='graph1' class="justify-content-center" style="margin-bottom: 80px;position: relative">
                         <div class="spinner-border text-light" id="hm-spinner" style="position: absolute; top: 27rem; left: 70rem; width: 4rem; height: 4rem; display: none;"></div>
                     </div>
                 </div>
             </turbo-frame>
             <!--Calculation results element-->
             <turbo-frame if="turboText">
-                <div>
-                <div id="calcResults"></div>
+                <div style="height: 30vh;">
+                    <div id="calcResults">
+                        <textarea class="terminal" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="terminal" cols="50" rows="50" style="width: 600px; height: 180px"></textarea> 
+                    </div>
                 </div>
             </turbo-frame>
         </section>
