@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from scipy import stats
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
+from wordcloud import WordCloud
 import datahandling
 
 
@@ -101,6 +102,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
     hotel_stats = df.groupby('Property Name')['Review Rating'].std()
     ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+    print('ambi"""""""', ambiguous_class_hotels)
 
     # list to store classification results
     classification_results = []
@@ -114,6 +116,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
         if len(positive_reviews) > len(negative_reviews):
             subclass = 'Positive'
+            print('Positive"""""""', subclass)
         else:
             subclass = 'Negative'
 
@@ -131,12 +134,54 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
     plt.show()
 
+def task5(csv_filepath):
+
+
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    std_deviation_threshold = 1.0
+
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+
+
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+    # Concatenate all reviews for positive and negative subclasses
+    positive_reviews_text = ' '.join(positive_reviews['Review Text'])
+    negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+
+    # WordCloud for the positive subclass
+    positive_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews_text)
+
+    # WordCloud for the negative subclass
+    negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
+
+    # WordCloud for the positive subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(positive_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Positive Subclass')
+    plt.axis('off')
+    plt.show()
+
+    # WordCloud for the negative subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(negative_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Negative Subclass')
+    plt.axis('off')
+    plt.show()
+
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
-    correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
-    group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
-    construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
-    proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
+    # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
+    # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
+    # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
+    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
+    task5('data/London_hotel_reviews.csv')
 
 
