@@ -61,38 +61,43 @@ window.addEventListener('DOMContentLoaded', event => {
 jQuery(document).ready(plotGraph);
 
     //Function to interact with the backend when plotting a graph
-    function calculate() {
-        let dataset = document.querySelector("#dataset").value;
-        let calculation = document.querySelector("#calculation").value;
-        var layout = {
-            autosize: true,
-            automargin: true,
-        };
-        //document.getElementById("hm-spinner").style.display = '';//Load button clicked, show spinner
-        $.ajax({
-            url: '/calculate',
-            type: 'POST',
-            data: {
-                'dataset': dataset,
-                'calculation': calculation
-            },
-            beforeSend: function() {
-                console.log("Sending POST request")
-            },
-            complete: function() {
-                document.getElementById("hm-spinner").style.display = 'none';//Request is complete so hide spinner
-                console.log("AJAX Request Complete.")
-            },
-            success: function (response) {
-                console.log(response);
-                var result = JSON.parse(response);
-                //Append result to terminal **TODO**
-            },
-            error: function (error) {
-                console.log(error);
-            }
-        }); 
-    }
+function calculate() {
+    let dataset = document.querySelector("#dataset").value;
+    let calculation = document.querySelector("#calculation").value;
+    var layout = {
+        autosize: true,
+        automargin: true,
+    };
+    $.ajax({
+        url: '/calculate',
+        type: 'POST',
+        data: {
+            'dataset': dataset,
+            'calculation': calculation
+        },
+        beforeSend: function() {
+            console.log("Sending POST request")
+        },
+        complete: function() {
+            document.getElementById("hm-spinner").style.display = 'none';//Request is complete so hide spinner
+            console.log("AJAX Request Complete.")
+        },
+        success: function (response) {
+            console.log(response);
+            var result = JSON.parse(response);
+            terminalWrite("\n")
+            terminalWrite("\n")
+            text_box.scrollTop = text_box.scrollHeight;
+            terminalWrite(result);
+                //Text area scrollbar anchor **These two lines need to be run each time the text area is updated**
+            //var text_box = document.getElementById('terminal');
+            text_box.scrollTop = text_box.scrollHeight;
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    }); 
+}
 
 
 //Text area scrollbar anchor **These two lines need to be run each time the text area is updated**
@@ -112,7 +117,12 @@ $('.primary-menu .navbar-nav .dropdown-toggle[href="#"], .primary-menu .dropdown
 		$parentli.find('> a .arrow').toggleClass('show');
 	}
 });
-
+//"sleep()" function
+function delay(milliseconds){
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
 
 // Mobile Menu
 $('.navbar-toggler').on('click', function() {
@@ -121,14 +131,14 @@ $('.navbar-toggler').on('click', function() {
 
 // Text area scripts
 // global vars
-let terminal, writeSpeed;
+let terminal, writeSpeed, FLAG;
 
 window.addEventListener('load', init);
 
 function init() {
   // default settings
   terminal = document.getElementById("terminal");
-  writeSpeed = 60;
+  writeSpeed = 45;
   terminalStart();
 }
 
@@ -138,7 +148,6 @@ function terminalStart() {
 
 function terminalWrite(text) {
     let counter = 0;
-  
     (function writer() {
       terminal.disabled = true;
       if (counter < text.length) {
@@ -147,6 +156,7 @@ function terminalWrite(text) {
           terminalText = `${terminalText}|`
         }
         terminal.value = terminalText;
+        text_box.scrollTop = text_box.scrollHeight;
         counter++;
         setTimeout(writer, writeSpeed);
       } else {
@@ -155,5 +165,5 @@ function terminalWrite(text) {
         terminal.blur();
         terminal.focus();
       }
-    })();
+    })();  
   }
