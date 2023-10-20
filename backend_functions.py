@@ -2,6 +2,7 @@
 Functions for Review Sentiment Analyzer
 '''
 import pandas as pd
+import plotly.express as px
 from matplotlib import pyplot as plt
 from scipy import stats
 from scipy.stats import kurtosis
@@ -34,6 +35,13 @@ def store_sent_score(csv_filepath, db_table, db):
     #Execute query
     datahandling.sql_execute(query, db)
 
+def style_plotly_fig(fig):
+    '''
+    Styles a given Plotly figure.
+    :param fig: Plotly figure
+    :return: Styled Plotyl figure
+    '''
+
 # correlation of the overall sentiment score of each review with the user’s rating
 def correlation_coefficient(csv_filepath, db_table, db):
     scores = datahandling.fetch_data(db_table,db)
@@ -54,7 +62,7 @@ def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(cs
         std = row['std']
         kurt = row['kurtosis']
 
-        print(f'Hotel: {hotel_name}, Mean: {mean}, Std: {std}, Kurtosis: {kurt}')
+        #print(f'Hotel: {hotel_name}, Mean: {mean}, Std: {std}, Kurtosis: {kurt}')
 
     # threshold to distinguish low and high standard deviations
     std_deviation_threshold = 1.0  # You can adjust this threshold as needed
@@ -82,7 +90,7 @@ def construct_histogram_for_star_categories(csv_filepath):
 
     for rating in review_ratings:
         subset = df[df['Review Rating'] == rating]
-        print('subset',subset)
+        #print('subset',subset)
         std_deviation_subset = subset.groupby('Property Name')['Review Rating'].std()
         proportion = (std_deviation_subset > std_deviation_threshold).mean()
         proportions.append(proportion)
@@ -126,10 +134,11 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     subclass_proportions = D1['Subclass'].value_counts()
     subclass_proportions.plot(kind='bar')
 
-    plt.xlabel("Subclass")
-    plt.ylabel("Proportion of Hotels")
-    plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
-    plt.show()
+    # plt.xlabel("Subclass")
+    # plt.ylabel("Proportion of Hotels")
+    # plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
+    # plt.show()
+
 
 
 if __name__ == '__main__':
@@ -138,5 +147,6 @@ if __name__ == '__main__':
     group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #print(datahandling.fetch_data('raw_sentiment_scores', 'raw_sentiment_scores.db'))
 
 
