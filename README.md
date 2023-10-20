@@ -31,7 +31,7 @@ If you managed to do section 1.) without any issues, you should see a web page l
 \
 \
 There are three selection menus with a descriptive header above each one. They can be used to choose the desired dataset to analyse, choose the calculations to perform on the dataset, and to choose a datagraph associated with the dataset to plot. 
-### 2.1) Performing calculations on the selected dataset
+### 2.1.) Performing calculations on the selected dataset
 Once you have chosen the desired dataset to analyze and the calculation you want to perform, click the `Calculate` -button. This will start the calculations, and will print the results to the textarea (There's a bug that can be seen if you choose to click the `Calculate` -button consecutively too fast. So hold your horses and don't click it until the text has finished printing onto the textarea).
-### 2.2) Plotting a selected graph on the selected dataset
+### 2.2.) Plotting a selected graph on the selected dataset
 Once you have chosen the desired dataset to analyze and the graph you wish to plot, click the `Update Graph` -button. This will perform any calculations needed to construct the selected graph, and will update the graph seen in the middle of the user interface with the chosen graph to plot.
