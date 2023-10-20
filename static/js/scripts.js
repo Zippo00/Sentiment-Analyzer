@@ -131,7 +131,7 @@ $('.navbar-toggler').on('click', function() {
 
 // Text area scripts
 // global vars
-let terminal, writeSpeed, FLAG;
+let terminal, writeSpeed;
 
 window.addEventListener('load', init);
 
