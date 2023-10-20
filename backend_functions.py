@@ -38,6 +38,7 @@ def store_sent_score(csv_filepath, db_table, db):
     #Execute query
     datahandling.sql_execute(query, db)
 
+# Task 2
 # correlation of the overall sentiment score of each review with the user’s rating
 def correlation_coefficient(csv_filepath, db_table, db):
     scores = datahandling.fetch_data(db_table,db)
@@ -47,6 +48,7 @@ def correlation_coefficient(csv_filepath, db_table, db):
     correlation_coefficient = stats.pearsonr(overall_sentiment_score, user_review_rating)
     return correlation_coefficient
 
+# Task 3
 def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
     grouped = df.groupby('Property Name')['Review Rating']
@@ -98,6 +100,7 @@ def construct_histogram_for_star_categories(csv_filepath):
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
     plt.show()
 
+# Task 4
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
 
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -137,6 +140,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
     plt.show()
 
+#Task 5
 def task5(csv_filepath):
 
 
@@ -178,6 +182,7 @@ def task5(csv_filepath):
     plt.axis('off')
     plt.show()
 
+# Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
