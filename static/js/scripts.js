@@ -45,8 +45,6 @@
                 console.log("AJAX Request Complete.")
             },
             success: function (response) {
-                //console.log(response);
-                //$("#chart_heatmap").fadeOut(100).fadeOut(100);
                 var graph1 = JSON.parse(response);
                 Plotly.newPlot('graph1', graph1);
             },
@@ -86,6 +84,57 @@ function calculate() {
             console.log(response);
             var result = JSON.parse(response);
             terminalWrite("\n")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
+            terminalWrite("-")
             terminalWrite("\n")
             text_box.scrollTop = text_box.scrollHeight;
             terminalWrite(result);
@@ -143,7 +192,7 @@ function init() {
 }
 
 function terminalStart() {
-    terminalWrite('--Welcome to using Sentiment Analyzer--\nResults of calculations and comments/conclusions related to them will be displayed here.\n---------------------------------------------------\n');
+    terminalWrite('-- Welcome to using Sentiment Analyzer --\nResults of calculations and comments/conclusions related to them will be displayed here.\n---------------------------------------------------\n');
   }
 
 function terminalWrite(text) {
