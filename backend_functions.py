@@ -4,10 +4,14 @@ Functions for Review Sentiment Analyzer
 import pandas as pd
 import plotly.express as px
 from matplotlib import pyplot as plt
-from scipy import stats
+from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
+from wordcloud import WordCloud
+from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim import corpora, models
 import datahandling
+import spacy
 
 
 def store_sent_score(csv_filepath, db_table, db):
@@ -35,13 +39,7 @@ def store_sent_score(csv_filepath, db_table, db):
     #Execute query
     datahandling.sql_execute(query, db)
 
-def style_plotly_fig(fig):
-    '''
-    Styles a given Plotly figure.
-    :param fig: Plotly figure
-    :return: Styled Plotyl figure
-    '''
-
+# Task 2
 # correlation of the overall sentiment score of each review with the user’s rating
 def correlation_coefficient(csv_filepath, db_table, db):
     scores = datahandling.fetch_data(db_table,db)
@@ -51,6 +49,7 @@ def correlation_coefficient(csv_filepath, db_table, db):
     correlation_coefficient = stats.pearsonr(overall_sentiment_score, user_review_rating)
     return correlation_coefficient
 
+# Task 3
 def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
     grouped = df.groupby('Property Name')['Review Rating']
@@ -102,6 +101,7 @@ def construct_histogram_for_star_categories(csv_filepath):
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
     plt.show()
 
+# Task 4
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
 
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -109,6 +109,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
     hotel_stats = df.groupby('Property Name')['Review Rating'].std()
     ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+    print('ambi"""""""', ambiguous_class_hotels)
 
     # list to store classification results
     classification_results = []
@@ -122,6 +123,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
         if len(positive_reviews) > len(negative_reviews):
             subclass = 'Positive'
+            print('Positive"""""""', subclass)
         else:
             subclass = 'Negative'
 
@@ -140,13 +142,112 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     # plt.show()
 
 
+#Task 5
+def task5(csv_filepath):
+
+
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    std_deviation_threshold = 1.0
+
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+
+
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+    # Concatenate all reviews for positive and negative subclasses
+    positive_reviews_text = ' '.join(positive_reviews['Review Text'])
+    negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+
+    # WordCloud for the positive subclass
+    positive_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews_text)
+
+    # WordCloud for the negative subclass
+    negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
+
+    # WordCloud for the positive subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(positive_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Positive Subclass')
+    plt.axis('off')
+    plt.show()
+
+    # WordCloud for the negative subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(negative_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Negative Subclass')
+    plt.axis('off')
+    plt.show()
+
+# Task 6
+def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    std_deviation_threshold = 1.0
+
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+    # Create a DataFrame for each subclass
+    positive_df = pd.DataFrame({'Review': positive_reviews, 'Sentiment': 'positive'})
+    negative_df = pd.DataFrame({'Review': negative_reviews, 'Sentiment': 'negative'})
+    # Combine the data into a single DataFrame
+    combined_df = pd.concat([positive_df, negative_df], ignore_index=True)
+
+    # Preprocess the text data using spaCy
+    nlp = spacy.load("en_core_web_sm")
+    def preprocess_text(text):
+        doc = nlp(text)
+        tokens = [token.lemma_ for token in doc if not token.is_punct]
+        return " ".join(tokens)
+
+    combined_df['Preprocessed Review'] = combined_df['Review'].apply(preprocess_text)
+
+    #  Initialize a TF-IDF vectorizer and Vectorize the Text
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.9, min_df=2, stop_words='english')
+
+    # Fit and transform the preprocessed text data
+    tfidf_matrix = tfidf_vectorizer.fit_transform(combined_df['Preprocessed Review'])
+    sparse.save_npz('tfidf_matrix.npz', sparse.csr_matrix(tfidf_matrix))
+
+    tfidf_matrix = sparse.load_npz('tfidf_matrix.npz')
+
+    # Convert the TF-IDF matrix to a Gensim corpus
+    corpus = corpora.MmCorpus(sparse.csr_matrix(tfidf_matrix))
+
+    # Apply LDA
+    num_topics = 5  # Number of topics
+    lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=tfidf_vectorizer.get_feature_names_out(),
+                                passes=15)
+
+    # use the lda_model and corpus to get topic distributions for each review, Store this information in your database D1
+
+    # Store the topic distribution for each review
+    topic_distributions = [lda_model[review] for review in corpus]
+    print(topic_distributions)
+
+    for i, distribution in enumerate(topic_distributions):
+        datahandling.sql_execute("INSERT INTO D1 (review_id, topic_distribution) VALUES (%s, %s)", (i, distribution))
+
+    # Compare the LDA results with WordCloud findings for overlaps and relevance.
+    #not able to import wordcloud and gensim
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
-    correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
-    group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
-    construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
-    proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
-    #print(datahandling.fetch_data('raw_sentiment_scores', 'raw_sentiment_scores.db'))
+    # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
+    # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
+    # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
+    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
+    task5('data/London_hotel_reviews.csv')
 
 

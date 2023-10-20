@@ -8,3 +8,4 @@ import datahandling
 
 if __name__ == '__main__':
     #datahandling.sql_execute("CREATE TABLE raw_sentiment_scores (pos_score INTEGER, neg_score INTEGER, overall_score INTEGER)", "raw_sentiment_scores.db") # I used this for creating the existing .db file -Mikko
+    datahandling.sql_execute("CREATE TABLE D1 (Ambiguous class STRING)", "D1.db")
