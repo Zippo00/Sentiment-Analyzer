@@ -2,7 +2,7 @@
 Web application for analyzing business reviews.
 
 ## How to setup & run
-Clone the repository to your local machine
+Clone the repository to your local machine.\
 Install dependencies with:
 ```sh
 pip install -r requirements.txt
