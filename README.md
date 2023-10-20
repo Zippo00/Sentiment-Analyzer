@@ -26,6 +26,7 @@ Navigate to the address the flask application is running on via a web browser. I
 
 ## 2.) How to use
 If you managed to do section 1.) without any issues, you should see a web page like this (size of your monitor and the web browser used might affect the aesthetics):\
+\
 ![plot](./static/assets/sentan_2.png)
 \
 \
