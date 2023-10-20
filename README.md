@@ -1,7 +1,7 @@
 # Sentiment Analyzer
 Web application for analyzing business reviews.
 
-## How to setup & run
+## 1.) How to setup & run
 Clone the repository to your local machine.\
 Install dependencies with:
 ```sh
@@ -24,4 +24,4 @@ Press CTRL+C to quit
 ```
 Navigate to the address the flask application is running on via a web browser. In the above case, navigate to address: `http://127.0.0.1:5000`
 
-## How to use
+## 2.) How to use
