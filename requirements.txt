@@ -1,5 +1,4 @@
 sentistrength
-sqlite3
 pandas
 flask
 Flask

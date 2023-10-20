@@ -3,17 +3,24 @@ from turbo_flask import Turbo
 import backend_functions
 import json
 import pandas as pd
+import plotly.express as px
 from plotly.utils import PlotlyJSONEncoder
 
 app = Flask(__name__)
 turbo = Turbo(app)
 
+
+#Placeholder figure. Remove later
+placeholder_df = px.data.tips()
+placeholder_fig = px.histogram(placeholder_df, x="day")
+
+
 @app.route('/')
 def index():
     #*Insert script here to plot some graph that will be shown first when user navigates to the web page*
-    #fig = 
-    #graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
-    return render_template('index.html')
+    fig = placeholder_fig
+    graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
+    return render_template('index.html', graphJSON=graphJSON)
 
 
 @app.route('/plot_graph', methods=['POST'])
@@ -23,19 +30,18 @@ def plot_graph():
     graph_to_plot = request.form.get('graphToPlot')
     if dataset == 'hotel_reviews':
         if graph_to_plot == 'task3':
-            pass
+            fig = placeholder_fig
         elif graph_to_plot == 'task4':
-            pass
+            fig = placeholder_fig
         elif graph_to_plot == 'task5':
-            pass
+            fig = placeholder_fig
         elif graph_to_plot == 'task11':
-            pass
+            fig = placeholder_fig
     else:
         return json.dumps("This part of the application is not developed yet. Try with a different dataset.")
-    #fig = 
-    #graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
-    #return graphJSON
-    return json.dumps("This part of the application is not developed yet.")
+    graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
+    return graphJSON
+
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
