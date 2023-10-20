@@ -3,11 +3,14 @@ Functions for Review Sentiment Analyzer
 '''
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy import stats
+from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
 from wordcloud import WordCloud
+from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim import corpora, models
 import datahandling
+import spacy
 
 
 def store_sent_score(csv_filepath, db_table, db):
@@ -175,6 +178,62 @@ def task5(csv_filepath):
     plt.axis('off')
     plt.show()
 
+def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    std_deviation_threshold = 1.0
+
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+    # Create a DataFrame for each subclass
+    positive_df = pd.DataFrame({'Review': positive_reviews, 'Sentiment': 'positive'})
+    negative_df = pd.DataFrame({'Review': negative_reviews, 'Sentiment': 'negative'})
+    # Combine the data into a single DataFrame
+    combined_df = pd.concat([positive_df, negative_df], ignore_index=True)
+
+    # Preprocess the text data using spaCy
+    nlp = spacy.load("en_core_web_sm")
+    def preprocess_text(text):
+        doc = nlp(text)
+        tokens = [token.lemma_ for token in doc if not token.is_punct]
+        return " ".join(tokens)
+
+    combined_df['Preprocessed Review'] = combined_df['Review'].apply(preprocess_text)
+
+    #  Initialize a TF-IDF vectorizer and Vectorize the Text
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.9, min_df=2, stop_words='english')
+
+    # Fit and transform the preprocessed text data
+    tfidf_matrix = tfidf_vectorizer.fit_transform(combined_df['Preprocessed Review'])
+    sparse.save_npz('tfidf_matrix.npz', sparse.csr_matrix(tfidf_matrix))
+
+    tfidf_matrix = sparse.load_npz('tfidf_matrix.npz')
+
+    # Convert the TF-IDF matrix to a Gensim corpus
+    corpus = corpora.MmCorpus(sparse.csr_matrix(tfidf_matrix))
+
+    # Apply LDA
+    num_topics = 5  # Number of topics
+    lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=tfidf_vectorizer.get_feature_names_out(),
+                                passes=15)
+
+    # use the lda_model and corpus to get topic distributions for each review, Store this information in your database D1
+
+    # Store the topic distribution for each review
+    topic_distributions = [lda_model[review] for review in corpus]
+    print(topic_distributions)
+
+    for i, distribution in enumerate(topic_distributions):
+        datahandling.sql_execute("INSERT INTO D1 (review_id, topic_distribution) VALUES (%s, %s)", (i, distribution))
+
+    # Compare the LDA results with WordCloud findings for overlaps and relevance.
+    #not able to import wordcloud and gensim
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
