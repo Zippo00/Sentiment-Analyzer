@@ -35,3 +35,10 @@ There are three selection menus with a descriptive header above each one. They c
 Once you have chosen the desired dataset to analyze and the calculation you want to perform, click the `Calculate` -button. This will start the calculations, and will print the results to the textarea (There's a bug that can be seen if you choose to click the `Calculate` -button consecutively too fast. So hold your horses and don't click it until the text has finished printing onto the textarea).
 ### 2.2.) Plotting a selected graph on the selected dataset
 Once you have chosen the desired dataset to analyze and the graph you wish to plot, click the `Update Graph` -button. This will perform any calculations needed to construct the selected graph, and will update the graph seen in the middle of the user interface with the chosen graph to plot.
+
+# Development
+If you are working on a headless console such as WSL, you need to install a GUI backend for matplotlib so that `.plot()` works.
+
+```sh
+sudo apt-get install python3-tk
+```
