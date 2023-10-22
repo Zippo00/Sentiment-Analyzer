@@ -4,4 +4,5 @@ flask
 Flask
 turbo_flask
 plotly
-json
+wordcloud
+spacy
