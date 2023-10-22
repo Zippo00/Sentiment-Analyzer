@@ -153,7 +153,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     plt.title('Proportion of Positive and Negative Subclasses in Ambiguous Class')
     plt.show()
 
-Task 5
+#Task 5
 def task5(csv_filepath):
 
 
@@ -195,7 +195,7 @@ def task5(csv_filepath):
     plt.axis('off')
     plt.show()
 
-Task 6
+#Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
