@@ -7,9 +7,9 @@ from matplotlib import pyplot as plt
 from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
-# from wordcloud import WordCloud
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# from gensim import corpora, models
+from wordcloud import WordCloud
+from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim import corpora, models
 import datahandling
 import spacy
 import json
