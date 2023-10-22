@@ -13,8 +13,14 @@ from gensim import corpora, models
 import datahandling
 import spacy
 import json
-from nltk.tokenize import word_tokenize
+import nltk
+from nltk import word_tokenize, pos_tag
 from nltk.probability import FreqDist
+from nltk.corpus import stopwords
+from nltk.tree import *
+
+nltk.download('averaged_perceptron_tagger') # POS tagging
+nltk.download('stopwords') # stopwords
 
 def store_sent_score(csv_filepath, db_table, db):
     '''
@@ -79,7 +85,6 @@ def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(cs
     # Comment whether the high variation of standard deviation occurs in expensive hotel or cheap hotels
     print("Hotels with Low Standard Deviation tend to have relatively consistent ratings.")
     print("Hotels with High Standard Deviation tend to have more variable ratings.")
-
 
 def construct_histogram_for_star_categories(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -155,25 +160,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
 #Task 5
 def task5(csv_filepath):
-
-
-    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
-    std_deviation_threshold = 1.0
-
-    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
-    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
-
-
-    for hotel in ambiguous_class_hotels:
-        hotel_reviews = df[df['Property Name'] == hotel]
-        positive_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
-        negative_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
-
-    # Concatenate all reviews for positive and negative subclasses
-    positive_reviews_text = ' '.join(positive_reviews['Review Text'])
-    negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
     # WordCloud for the positive subclass
     positive_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews_text)
@@ -197,17 +184,7 @@ def task5(csv_filepath):
 
 #Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
-    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
-    std_deviation_threshold = 1.0
-
-    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
-    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
-    for hotel in ambiguous_class_hotels:
-        hotel_reviews = df[df['Property Name'] == hotel]
-        positive_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
-        negative_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+    (positive_reviews, negative_reviews) = classify_reviews(csv_filepath, stringify=False)
 
     # Create a DataFrame for each subclass
     positive_df = pd.DataFrame({'Review': positive_reviews, 'Sentiment': 'positive'})
@@ -253,8 +230,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     # Compare the LDA results with WordCloud findings for overlaps and relevance.
     #not able to import wordcloud and gensim
 
-def task11(csv_filepath):
-    # TODO copy paste, extract a func
+def classify_reviews(csv_filepath, stringify=False):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
 
@@ -268,11 +244,17 @@ def task11(csv_filepath):
         negative_reviews = hotel_reviews[
             hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
 
-    # Concatenate all reviews for positive and negative subclasses  
-    positive_reviews_text = ' '.join(positive_reviews['Review Text'])
-    negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+    if stringify:
+        # Concatenate all reviews for positive and negative subclasses  
+        positive_reviews_text = ' '.join(positive_reviews['Review Text'])
+        negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+        return (positive_reviews_text, negative_reviews_text)
+    return (positive_reviews, negative_reviews)
 
-    # New for task 11
+# Task 11
+def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+
     cat_freq_pos = {}
     cat_freq_neg = {}
 
@@ -294,6 +276,76 @@ def task11(csv_filepath):
     ax2.set_title('category occurrence (negative reviews)')
     plt.show()
 
+# Task 12
+def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_filepath):
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+
+    def preprocess(text, remove_stopwords=False, stemming=False):
+        words = word_tokenize(text)
+        words = [w.lower() for w in words]
+        if remove_stopwords:
+            s_words = stopwords.words('english')
+            words = [w for w in words if not w in s_words]
+        return words
+
+    positive_reviews_text_processed = preprocess(positive_reviews_text, remove_stopwords=True)
+    negative_reviews_text_processed = preprocess(negative_reviews_text, remove_stopwords=True)
+
+    positive_reviews_text_tagged = pos_tag(positive_reviews_text_processed)
+    negative_reviews_text_tagged = pos_tag(negative_reviews_text_processed)
+
+    def read_lexicon(filename):
+        with open('data/hu_liu_lexicon/' + filename, 'r', errors='replace') as lexicon_file:
+            words = [l.strip() for l in lexicon_file.readlines() if not l.startswith(';') and l.strip() != '']
+        print(f'# of words in lexicon \'{filename}\': {len(words)}')
+        return words
+
+    # Consider only those lexicon words that are contained in the review texts
+    lexicon_words_positive = [w for w in read_lexicon('positive-words.txt') if w in positive_reviews_text_processed]
+    lexicon_words_negative = [w for w in read_lexicon('negative-words.txt') if w in negative_reviews_text_processed]
+    
+    def map_nouns_to_lexicon(tagged_tokens, lexicon_tokens):
+        nouns_to_adjectives = {}
+        for (lidx, lw) in enumerate(lexicon_tokens):
+            for (ridx, (rw, tag)) in enumerate(tagged_tokens):
+                if lw == rw:
+                    # check a 2-word window around the word
+                    for i in range(-2, 2):
+                        # skip the lexicon word itself
+                        if i == 0:
+                            continue
+                        # find a noun
+                        (w, t) = tagged_tokens[ridx - i]
+                        if t == 'NN':
+                            if lw in nouns_to_adjectives.keys():
+                                if w not in nouns_to_adjectives[lw]:
+                                    nouns_to_adjectives[lw].append(w)
+                            else:
+                                nouns_to_adjectives[lw] = [w]
+                            break # continue to next word after the first match
+        return nouns_to_adjectives
+
+    nouns_to_adjectives_positive = map_nouns_to_lexicon(positive_reviews_text_tagged, lexicon_words_positive)
+    nouns_to_adjectives_negative = map_nouns_to_lexicon(negative_reviews_text_tagged, lexicon_words_negative)
+
+    # print(nouns_to_adjectives_positive)
+    # print(nouns_to_adjectives_negative)
+    datahandling.sql_execute("DROP TABLE IF EXISTS task12;", 'task12.db')
+    datahandling.sql_execute("""
+    CREATE TABLE task12 (
+        adj TEXT,
+        nouns TEXT,
+        UNIQUE(adj)
+    );
+    """, 'task12.db')
+    query = f'INSERT INTO task12 (adj, nouns) VALUES '
+    for (adj, noun_list) in nouns_to_adjectives_positive.items():
+        print(json.dumps(noun_list))
+        query += f"""('{adj}', '{json.dumps(noun_list)}'), """
+    query = query[:-2]
+    datahandling.sql_execute(query, 'task12.db')
+    return datahandling.fetch_data('task12', 'task12.db', 'SELECT * FROM task12')
+
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
     # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
@@ -301,6 +353,6 @@ if __name__ == '__main__':
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
-    #task11('data/London_hotel_reviews.csv')
+    identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
 
 

@@ -187,7 +187,7 @@ window.addEventListener('load', init);
 function init() {
   // default settings
   terminal = document.getElementById("terminal");
-  writeSpeed = 45;
+  writeSpeed = 10;
   terminalStart();
 }
 
