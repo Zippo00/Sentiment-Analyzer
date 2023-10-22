@@ -1,0 +1,20 @@
+{
+    "price": {
+        "synonyms": ["value", "bill", "cost", "expense", "fee", "rate"]
+    },
+    "service": {
+        "synonyms": ["assistance"]
+    },
+    "parking": {
+        "synonyms": []
+    },
+    "room": {
+        "synonyms": []
+    },
+    "location": {
+        "synonyms": ["place", "area", "district", "neighborhood", "neighbourhood", "region", "venue", "spot", "whereabouts"]
+    },
+    "food": {
+        "synonyms": ["cuisine", "bread", "cooking", "drink", "meal", "snack"]
+    }
+}

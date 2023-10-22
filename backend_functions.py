@@ -12,7 +12,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import corpora, models
 import datahandling
 import spacy
-
+import json
+from nltk.tokenize import word_tokenize
+from nltk.probability import FreqDist
 
 def store_sent_score(csv_filepath, db_table, db):
     '''
@@ -175,14 +177,16 @@ def task5(csv_filepath):
     plt.imshow(positive_wordcloud, interpolation='bilinear')
     plt.title('WordCloud for Positive Subclass')
     plt.axis('off')
-    plt.show()
+    #plt.show()
+    plt.savefig('positive.png')
 
     # WordCloud for the negative subclass
     plt.figure(figsize=(10, 5))
     plt.imshow(negative_wordcloud, interpolation='bilinear')
     plt.title('WordCloud for Negative Subclass')
     plt.axis('off')
-    plt.show()
+    #plt.show()
+    plt.savefig('negative.png')
 
 # Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
@@ -242,12 +246,54 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     # Compare the LDA results with WordCloud findings for overlaps and relevance.
     #not able to import wordcloud and gensim
 
+def task11(csv_filepath):
+    # TODO copy paste, extract a func
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    std_deviation_threshold = 1.0
+
+    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
+    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
+
+    for hotel in ambiguous_class_hotels:
+        hotel_reviews = df[df['Property Name'] == hotel]
+        positive_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
+        negative_reviews = hotel_reviews[
+            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
+
+    # Concatenate all reviews for positive and negative subclasses  
+    positive_reviews_text = ' '.join(positive_reviews['Review Text'])
+    negative_reviews_text = ' '.join(negative_reviews['Review Text'])
+
+    # New for task 11
+    cat_freq_pos = {}
+    cat_freq_neg = {}
+
+    with open('data/common_cat_ontology.json') as json_file:
+        common_categories_ontology = json.load(json_file)
+        common_categories = common_categories_ontology.keys()
+        for c in common_categories:
+            synset = common_categories_ontology[c]['synonyms']
+            synset.append(c)
+            fd_pos = FreqDist(token.lower() for token in word_tokenize(positive_reviews_text) if token.lower() in synset)
+            fd_neg = FreqDist(token.lower() for token in word_tokenize(negative_reviews_text) if token.lower() in synset)
+            cat_freq_pos[c] = fd_pos.N()
+            cat_freq_neg[c] = fd_neg.N()
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    bar_pos = ax1.bar(cat_freq_pos.keys(), cat_freq_pos.values())
+    bar_neg = ax2.bar(cat_freq_neg.keys(), cat_freq_neg.values())
+    ax1.set_title('category occurrence (positive reviews)')
+    ax2.set_title('category occurrence (negative reviews)')
+    plt.show()
+
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
     # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
     # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
-    task5('data/London_hotel_reviews.csv')
+    #task5('data/London_hotel_reviews.csv')
+    task11('data/London_hotel_reviews.csv')
 
 
