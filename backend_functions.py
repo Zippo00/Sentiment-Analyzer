@@ -177,16 +177,14 @@ def task5(csv_filepath):
     plt.imshow(positive_wordcloud, interpolation='bilinear')
     plt.title('WordCloud for Positive Subclass')
     plt.axis('off')
-    #plt.show()
-    plt.savefig('positive.png')
+    plt.show()
 
     # WordCloud for the negative subclass
     plt.figure(figsize=(10, 5))
     plt.imshow(negative_wordcloud, interpolation='bilinear')
     plt.title('WordCloud for Negative Subclass')
     plt.axis('off')
-    #plt.show()
-    plt.savefig('negative.png')
+    plt.show()
 
 # Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
