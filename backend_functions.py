@@ -7,9 +7,9 @@ from matplotlib import pyplot as plt
 from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
-from wordcloud import WordCloud
-from sklearn.feature_extraction.text import TfidfVectorizer
-from gensim import corpora, models
+# from wordcloud import WordCloud
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from gensim import corpora, models
 import datahandling
 import spacy
 import json
@@ -103,48 +103,57 @@ def construct_histogram_for_star_categories(csv_filepath):
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
     plt.show()
 
+
 # Task 4
-def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
+def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath, db_table, db):
 
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
+    hotel_stats = df.groupby('Property Name')['Review Rating'].agg(['std', 'mean']).reset_index()
+    print(hotel_stats)
+    print(hotel_stats['Property Name'])
 
-    hotel_stats = df.groupby('Property Name')['Review Rating'].std()
-    ambiguous_class_hotels = hotel_stats[hotel_stats > std_deviation_threshold].index
-    print('ambi"""""""', ambiguous_class_hotels)
-
-    # list to store classification results
-    classification_results = []
-
-    for hotel in ambiguous_class_hotels:
-        hotel_reviews = df[df['Property Name'] == hotel]
-        positive_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] >= 4]  # Example: Consider ratings of 4 and 5 as positive
-        negative_reviews = hotel_reviews[
-            hotel_reviews['Review Rating'] <= 2]  # Example: Consider ratings of 1 and 2 as negative
-
-        if len(positive_reviews) > len(negative_reviews):
-            subclass = 'Positive'
-            print('Positive"""""""', subclass)
+    def determine_subclass(row):
+        if row['std'] > std_deviation_threshold:
+            # If the standard deviation is above the threshold, check the sentiment
+            if row['mean'] > 3.5:
+                return 'Positive'
+            else:
+                return 'Negative'
         else:
-            subclass = 'Negative'
+            return None
 
-        classification_results.append({'Hotel': hotel, 'Ambiguous': 'Yes', 'Subclass': subclass})
+    hotel_stats['Subclass'] = hotel_stats.apply(determine_subclass, axis=1)
+    print(hotel_stats)
 
-    # DataFrame to store the classification results
-    D1 = pd.DataFrame(classification_results)
+    queryToCreateTable = f"""CREATE TABLE IF NOT EXISTS {db_table} (property_name text PRIMARY KEY, sub_class text NOT NULL)"""
+    insert_query = f"INSERT INTO {db_table} VALUES"
+    for propertyName, subClass in zip(hotel_stats['Property Name'], hotel_stats['Subclass']):
+        insert_query += f"""('{propertyName}', '{subClass}'),"""
+    insert_query = insert_query[:-1]  # Remove the trailing comma
 
-    # histogram to visualize the proportion of positive and negative subclasses in the Ambiguous Class
-    subclass_proportions = D1['Subclass'].value_counts()
-    subclass_proportions.plot(kind='bar')
+    datahandling.sql_execute(queryToCreateTable,db)
+    datahandling.sql_execute(insert_query,db)
 
-    # plt.xlabel("Subclass")
-    # plt.ylabel("Proportion of Hotels")
-    # plt.title("Proportion of Positive and Negative Subclasses in the Ambiguous Class")
-    # plt.show()
+    # Load the data from the database
+    query = f"""SELECT sub_class FROM {db_table} WHERE sub_class IS NOT NULL"""
+    subclass_data = datahandling.fetch_data(db_table, db,query)
 
+    if not isinstance(subclass_data, pd.DataFrame):
+        subclass_data = pd.DataFrame(subclass_data, columns=["sub_class"])
 
-#Task 5
+    # Count the occurrences of each subclass
+    subclass_counts = subclass_data['sub_class'].value_counts()
+    print('Subclass!!!!!!!!!!!!!!!!',subclass_counts)
+
+    # Plot the histogram
+    plt.bar(subclass_counts.index, subclass_counts.values)
+    plt.xlabel('Subclass')
+    plt.ylabel('Count')
+    plt.title('Proportion of Positive and Negative Subclasses in Ambiguous Class')
+    plt.show()
+
+Task 5
 def task5(csv_filepath):
 
 
@@ -186,7 +195,7 @@ def task5(csv_filepath):
     plt.axis('off')
     plt.show()
 
-# Task 6
+Task 6
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
@@ -290,8 +299,8 @@ if __name__ == '__main__':
     # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
     # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
-    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv')
+    proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
-    task11('data/London_hotel_reviews.csv')
+    #task11('data/London_hotel_reviews.csv')
 
 
