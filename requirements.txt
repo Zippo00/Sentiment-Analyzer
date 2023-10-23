@@ -6,3 +6,5 @@ turbo_flask
 plotly
 wordcloud
 spacy
+nltk
+empath
