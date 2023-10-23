@@ -13,6 +13,7 @@ from gensim import corpora, models
 import datahandling
 import spacy
 import json
+from empath import Empath
 import nltk
 from nltk import word_tokenize, pos_tag
 from nltk.probability import FreqDist
@@ -251,6 +252,55 @@ def classify_reviews(csv_filepath, stringify=False):
         return (positive_reviews_text, negative_reviews_text)
     return (positive_reviews, negative_reviews)
 
+def task7(csv_filepath):
+    '''
+    Generate categories with Empath Client for reviews of hotels that belong to
+    the negative subclass or positive sublass. Store the generated results as json
+    files into 'data' folder.
+    :param csv_filepath: (string) Filepath to .csv file containing the review data.
+    '''
+    lexicon = Empath()
+    subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
+    subclasses = {}
+    for i in subclass_table:
+        subclasses[i[0]] = i[1]
+    negative_subclass_reviews = []
+    positive_subclass_reviews = []
+    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    for i in df.index:
+        if subclasses[df['Property Name'][i]] == 'None':
+            continue
+        elif subclasses[df['Property Name'][i]] == 'Negative':
+            negative_subclass_reviews.append(df['Review Text'][i])
+        elif subclasses[df['Property Name'][i]] == 'Positive':
+            positive_subclass_reviews.append(df['Review Text'][i])
+    print(f'\nReviews of hotels in negative subclass: {len(negative_subclass_reviews)}')
+    print(f'\nReviews of hotels in positive subclass: {len(positive_subclass_reviews)}')
+    # Apply Empath Client to get categories for reviews
+    neg_subclass_empath_cats = lexicon.analyze(negative_subclass_reviews, normalize=True)
+    pos_subclass_empath_cats = lexicon.analyze(positive_subclass_reviews, normalize=True)
+    # Remove any categories with a zero value
+    to_remove = []
+    for i in neg_subclass_empath_cats.items():
+        if i[1] == 0.0:
+            #print(i)
+            to_remove.append(i[0])
+    for i in to_remove:
+        neg_subclass_empath_cats.pop(i)
+
+    to_remove = []
+    for i in pos_subclass_empath_cats.items():
+        if i[1] == 0.0:
+            #print(i)
+            to_remove.append(i[0])
+    for i in to_remove:
+        pos_subclass_empath_cats.pop(i)
+    # Store results as json files
+    with open('data/neg_subclass_empath_cats.json', 'w') as f:
+        json.dump(neg_subclass_empath_cats, f, sort_keys=True, indent=4)
+    with open('data/pos_subclass_empath_cats.json', 'w') as f:
+        json.dump(pos_subclass_empath_cats, f, sort_keys=True, indent=4)
+
 # Task 11
 def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
@@ -351,8 +401,9 @@ if __name__ == '__main__':
     # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
     # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
-    proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
+    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
-    identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
+    pass
 
 
