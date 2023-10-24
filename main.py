@@ -30,13 +30,17 @@ def plot_graph():
     graph_to_plot = request.form.get('graphToPlot')
     if dataset == 'hotel_reviews':
         if graph_to_plot == 'task3':
-            fig = placeholder_fig
+            fig = backend_functions.construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
         elif graph_to_plot == 'task4':
-            fig = placeholder_fig
-        elif graph_to_plot == 'task5':
-            fig = placeholder_fig
+            fig = backend_functions.proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclasses_table', 'D1.db')
+        elif graph_to_plot == 'task5_1':
+            fig1, fig2 = backend_functions.task5_plotly('data/London_hotel_reviews.csv')
+            fig = fig1
+        elif graph_to_plot == 'task5_2':
+            fig1, fig2 = backend_functions.task5_plotly('data/London_hotel_reviews.csv')
+            fig = fig2
         elif graph_to_plot == 'task11':
-            fig = placeholder_fig
+            fig = backend_functions.occurrence_of_positive_and_negative_words_in_ambiguous_class('data/London_hotel_reviews.csv')
     else:
         return json.dumps("This part of the application is not developed yet. Try with a different dataset.")
     graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)

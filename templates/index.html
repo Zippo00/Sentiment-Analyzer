@@ -63,7 +63,7 @@
                 <turbo-frame id="turboGraph">
                     <div style="margin-top: 0px;">
                         <div id='graph1' class="justify-content-center" style="margin-bottom: 80px;margin-left: 4em;margin-right: 4em;width: 500px;height: 350px">
-                            <div class="spinner-border text-light" id="hm-spinner" style="position: absolute; top: 25rem; left: 48vw; width: 4rem; height: 4rem; display: none;"></div>
+                            <div class="spinner-border" id="hm-spinner" style="position: absolute; top: 25rem; left: 48vw; width: 4rem; height: 4rem; color: #66cc00; display: none;"></div>
                         </div>
                     </div>
                 </turbo-frame>
@@ -74,7 +74,8 @@
                         <select name="graphToPlot" id="graphToPlot">
                             <option value="task3" selected>Task 3.</option>
                             <option value="task4">Task 4.</option>
-                            <option value="task5">Task 5.</option>
+                            <option value="task5_1">Task 5. (Positive)</option>
+                            <option value="task5_2">Task 5. (Negative)</option>
                             <option value="task11">Task 11.</option>
                         </select>
                     </div>
@@ -123,7 +124,7 @@
                 modeBarButtonsToRemove: ['lasso2d', 'zoom2d', 'pan2d', 'resetScale2d', 'select2d', 'resetScale2d', 'hoverCompareCartesian', 'hoverClosestCartesian'],
                 toImageButtonOptions: {
                     format: 'png', // one of png, svg, jpeg, webp
-                    filename: 'sentiment_chart',
+                    filename: 'sentiment_analyzer_chart',
                     height: 1080,
                     width: 1920,
                     scale: 1 // Multiply title/legend/axis/canvas sizes by this factor

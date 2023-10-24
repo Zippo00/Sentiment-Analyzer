@@ -3,6 +3,8 @@ Functions for Review Sentiment Analyzer
 '''
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objs as go
+import plotly.tools as tls
 from matplotlib import pyplot as plt
 from scipy import stats, sparse
 from scipy.stats import kurtosis
@@ -47,6 +49,60 @@ def store_sent_score(csv_filepath, db_table, db):
     query = query[:-2]
     #Execute query
     datahandling.sql_execute(query, db)
+
+def plotly_wordcloud(text):
+    '''
+    Generates a Plotly WordCloud figure from the given text.
+    :param text: (str) Text to generate WordCloud from.
+    :return: (fig) Plotly figure.
+    '''
+    wc = WordCloud(width=800, height=400, background_color='white')
+    wc.generate(text)
+    
+    word_list=[]
+    freq_list=[]
+    fontsize_list=[]
+    position_list=[]
+    orientation_list=[]
+    color_list=[]
+
+    for (word, freq), fontsize, position, orientation, color in wc.layout_:
+        word_list.append(word)
+        freq_list.append(freq)
+        fontsize_list.append(fontsize)
+        position_list.append(position)
+        orientation_list.append(orientation)
+        color_list.append(color)
+        
+    # get the positions
+    x=[]
+    y=[]
+    for i in position_list:
+        x.append(i[0])
+        y.append(i[1])
+            
+    # get the relative occurence frequencies
+    new_freq_list = []
+    for i in freq_list:
+        new_freq_list.append(i*100)
+    new_freq_list
+    
+    trace = go.Scatter(x=x, 
+                       y=y, 
+                       textfont = dict(size=new_freq_list,
+                                       color=color_list),
+                       hoverinfo='text',
+                       hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
+                       mode='text',  
+                       text=word_list
+                      )
+    
+    layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
+                        'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
+    
+    fig = go.Figure(data=[trace], layout=layout)
+    
+    return fig
 
 # Task 2
 # correlation of the overall sentiment score of each review with the user’s rating
@@ -103,12 +159,13 @@ def construct_histogram_for_star_categories(csv_filepath):
         proportions.append(proportion)
 
     # histogram to visualize proportions for each review rating
+    fig = plt.figure(figsize=(5,4))
     plt.bar(review_ratings, proportions)
     plt.xlabel("Review Rating")
     plt.ylabel("Proportion of Hotels with High Standard Deviation")
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
-    plt.show()
-
+    #plt.show()
+    return tls.mpl_to_plotly(fig)
 
 # Task 4
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath, db_table, db):
@@ -153,18 +210,21 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     print('Subclass!!!!!!!!!!!!!!!!',subclass_counts)
 
     # Plot the histogram
+    fig = plt.figure(figsize=(5,4))
     plt.bar(subclass_counts.index, subclass_counts.values)
     plt.xlabel('Subclass')
     plt.ylabel('Count')
-    plt.title('Proportion of Positive and Negative Subclasses in Ambiguous Class')
-    plt.show()
+    plt.title('Proportion of Positive and Negative Subclasses in Ambiguous Class', fontsize=7)
+    #plt.show()
+    # Change the matplotlib figure into a Plotly figure and return it
+    return tls.mpl_to_plotly(fig)
 
 #Task 5
 def task5(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
     # WordCloud for the positive subclass
-    positive_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews_text)
+    positive_wordcloud = WordCloud(width=250, height=150, background_color='white').generate(positive_reviews_text)
 
     # WordCloud for the negative subclass
     negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
@@ -183,8 +243,20 @@ def task5(csv_filepath):
     plt.axis('off')
     plt.show()
 
+def task5_plotly(csv_filepath):
+    '''
+    Same as task5 -function, but outputs the WordCloud figures as plotly figures, 
+    instead of matplotlib.
+    :param csv_filepath: (str) Filepath to .csv file to extract the data to analyze from.
+    :return: (fig) Returns two plotly figures.
+    '''
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+    fig1 = plotly_wordcloud(positive_reviews_text)
+    fig2 = plotly_wordcloud(negative_reviews_text)
+    return fig1, fig2
+
 #Task 6
-def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath):
+def proportion_of_positive_and_negative_subclass_in_ambiguous_class2(csv_filepath):
     (positive_reviews, negative_reviews) = classify_reviews(csv_filepath, stringify=False)
 
     # Create a DataFrame for each subclass
@@ -319,12 +391,14 @@ def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
             cat_freq_pos[c] = fd_pos.N()
             cat_freq_neg[c] = fd_neg.N()
     
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(5,4))
     bar_pos = ax1.bar(cat_freq_pos.keys(), cat_freq_pos.values())
     bar_neg = ax2.bar(cat_freq_neg.keys(), cat_freq_neg.values())
-    ax1.set_title('category occurrence (positive reviews)')
-    ax2.set_title('category occurrence (negative reviews)')
-    plt.show()
+    ax1.set_title('Category Occurrence (Positive Reviews)', fontsize=7)
+    ax2.set_title('Category Occurrence (Negative Reviews)', fontsize=7)
+    #plt.show()
+    #Change matplotlib graph to plotly graph and return it
+    return tls.mpl_to_plotly(fig)
 
 # Task 12
 def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_filepath):
@@ -395,6 +469,7 @@ def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_f
     query = query[:-2]
     datahandling.sql_execute(query, 'task12.db')
     return datahandling.fetch_data('task12', 'task12.db', 'SELECT * FROM task12')
+
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
