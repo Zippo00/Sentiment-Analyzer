@@ -69,7 +69,9 @@ def calculate():
         elif calculation =='task9':
             pass
         elif calculation =='task12':
-            pass
+            result = "Some of the associations can lead to evaluation errors if taken at face value. For example, is the pair 'cheapest - choice' really always a positive thing?\n\
+            Similarly, the adjectives 'adequate' & 'decent' could belong to either class.\n\
+            As per the common categories in task 11, 'room' was clearly the most commonly rated aspect, associated with multiple different adjectives."
     else:
         return json.dumps("This part of the application is not developed yet. Try with a different dataset.")
     if not result:
