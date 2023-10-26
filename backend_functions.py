@@ -388,7 +388,7 @@ def task7(csv_filepath):
         json.dump(pos_subclass_empath_cats, f, sort_keys=True, indent=4)
 
 # Task 11
-def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
+def occurrence_of_positive_and_negative_words(csv_filepath):
     subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
     subclasses = {}
     for i in subclass_table:
@@ -452,12 +452,12 @@ def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
     bar_neg = ax2.bar(cat_freq_neg.keys(), cat_freq_neg.values())
     ax1.set_title('Category Occurrence (Positive Reviews)', fontsize=7)
     ax2.set_title('Category Occurrence (Negative Reviews)', fontsize=7)
-    plt.show()
+    #plt.show()
     #Change matplotlib graph to plotly graph and return it
     return tls.mpl_to_plotly(fig)
 
 # Task 12
-def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_filepath):
+def identify_nouns_for_positive_and_negative_adjectives(csv_filepath):
     subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
     subclasses = {}
     for i in subclass_table:
@@ -618,7 +618,7 @@ if __name__ == '__main__':
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
-    #occurrence_of_positive_and_negative_words_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
     #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv')
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
