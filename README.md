@@ -1,7 +1,7 @@
 # Sentiment Analyzer
 Web application for analyzing business reviews.
 
-## 1.) How to setup & run
+## 1.) How to setup & run (Tested on Windows with Python v3.11.5)
 Clone the repository to your local machine.\
 Install dependencies with:
 ```sh

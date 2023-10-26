@@ -1,20 +1,32 @@
 {
     "price": {
-        "synonyms": ["value", "bill", "cost", "expense", "fee", "rate"]
+        "synonyms": ["value", "cost", "rate"],
+        "hypernyms": ["pay"],
+        "hyponyms": ["bill", "expense", "fee", "receipt"]
     },
     "service": {
-        "synonyms": ["assistance"]
+        "synonyms": ["assistance", "help"],
+        "hypernyms": [],
+        "hyponyms": ["cleaning", "cooking", "dishwashing", "laundering", "valet", "reception", "admittance", "sign-off"]
     },
     "parking": {
-        "synonyms": []
+        "synonyms": [],
+        "hypernyms": ["car", "vehicle", "taxi"],
+        "hyponyms": ["valet"]
     },
     "room": {
-        "synonyms": []
+        "synonyms": [],
+        "hypernyms": ["building", "apartment", "flat", "house", "establishment", "hotel"],
+        "hyponyms": ["bathroom", "bedroom", "kitchen", "balcony", "terrace", "bed", "shower"]
     },
     "location": {
-        "synonyms": ["place", "area", "district", "neighborhood", "neighbourhood", "region", "venue", "spot", "whereabouts"]
+        "synonyms": ["place", "venue", "spot", "whereabouts"],
+        "hypernyms": ["area", "district", "neighborhood", "neighbourhood", "region"],
+        "hyponyms": ["yard", "garden", "outside", "inside"]
     },
     "food": {
-        "synonyms": ["cuisine", "bread", "cooking", "drink", "meal", "snack"]
+        "synonyms": ["cuisine", "cooking", "meal"],
+        "hypernyms": ["cook"],
+        "hyponyms": ["snack", "snacks", "bread", "drink", "drinks", "breakfast", "dinner", "brunch", "buffet"]
     }
 }

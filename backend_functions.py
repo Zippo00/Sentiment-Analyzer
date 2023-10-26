@@ -9,18 +9,20 @@ from matplotlib import pyplot as plt
 from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
+from sklearn.decomposition import LatentDirichletAllocation
 from wordcloud import WordCloud
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import  CountVectorizer
 from gensim import corpora, models
 import datahandling
 import spacy
 import json
 from empath import Empath
 import nltk
-from nltk import word_tokenize, pos_tag
+from nltk import sent_tokenize, word_tokenize, pos_tag, pos_tag_sents
 from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 from nltk.tree import *
+import re
 
 nltk.download('averaged_perceptron_tagger') # POS tagging
 nltk.download('stopwords') # stopwords
@@ -220,7 +222,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     return tls.mpl_to_plotly(fig)
 
 #Task 5
-def task5(csv_filepath):
+def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
     # WordCloud for the positive subclass
@@ -245,7 +247,7 @@ def task5(csv_filepath):
 
 def task5_plotly(csv_filepath):
     '''
-    Same as task5 -function, but outputs the WordCloud figures as plotly figures, 
+    Same as task5 -function, but outputs the WordCloud figures as plotly figures,
     instead of matplotlib.
     :param csv_filepath: (str) Filepath to .csv file to extract the data to analyze from.
     :return: (fig) Returns two plotly figures.
@@ -256,52 +258,64 @@ def task5_plotly(csv_filepath):
     return fig1, fig2
 
 #Task 6
-def proportion_of_positive_and_negative_subclass_in_ambiguous_class2(csv_filepath):
-    (positive_reviews, negative_reviews) = classify_reviews(csv_filepath, stringify=False)
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath):
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
 
-    # Create a DataFrame for each subclass
-    positive_df = pd.DataFrame({'Review': positive_reviews, 'Sentiment': 'positive'})
-    negative_df = pd.DataFrame({'Review': negative_reviews, 'Sentiment': 'negative'})
-    # Combine the data into a single DataFrame
-    combined_df = pd.concat([positive_df, negative_df], ignore_index=True)
-
-    # Preprocess the text data using spaCy
-    nlp = spacy.load("en_core_web_sm")
     def preprocess_text(text):
-        doc = nlp(text)
-        tokens = [token.lemma_ for token in doc if not token.is_punct]
-        return " ".join(tokens)
+        # Tokenize the text
+        words = word_tokenize(text)
 
-    combined_df['Preprocessed Review'] = combined_df['Review'].apply(preprocess_text)
+        # Remove punctuation and convert to lowercase
+        words = [word.lower() for word in words if word.isalpha()]
 
-    #  Initialize a TF-IDF vectorizer and Vectorize the Text
-    tfidf_vectorizer = TfidfVectorizer(max_df=0.9, min_df=2, stop_words='english')
+        # Remove stopwords
+        words = [word for word in words if word not in stopwords.words('english')]
 
-    # Fit and transform the preprocessed text data
-    tfidf_matrix = tfidf_vectorizer.fit_transform(combined_df['Preprocessed Review'])
-    sparse.save_npz('tfidf_matrix.npz', sparse.csr_matrix(tfidf_matrix))
+        # Join the words back into a clean text
+        cleaned_text = ' '.join(words)
 
-    tfidf_matrix = sparse.load_npz('tfidf_matrix.npz')
+        return cleaned_text
 
-    # Convert the TF-IDF matrix to a Gensim corpus
-    corpus = corpora.MmCorpus(sparse.csr_matrix(tfidf_matrix))
+    # Apply the preprocessing function to the "Review Text" column
+    df['Review Text'] = df['Review Text'].apply(preprocess_text)
 
-    # Apply LDA
-    num_topics = 5  # Number of topics
-    lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=tfidf_vectorizer.get_feature_names_out(),
-                                passes=15)
+    positive_df = df[df['Subclass'] == 'Positive']
+    negative_df = df[df['Subclass'] == 'Negative']
 
-    # use the lda_model and corpus to get topic distributions for each review, Store this information in your database D1
+    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
 
-    # Store the topic distribution for each review
-    topic_distributions = [lda_model[review] for review in corpus]
-    print(topic_distributions)
+    # Perform LDA for the positive subclass
+    X_positive = vectorizer.fit_transform(positive_df['Review Text'])
+    n_topics = 5  # Number of topics
+    n_words = 5  # Number of words per topic
+    lda_positive = LatentDirichletAllocation(n_components=n_topics, random_state=42)
+    lda_positive.fit(X_positive)
+    print(lda_positive)
 
-    for i, distribution in enumerate(topic_distributions):
-        datahandling.sql_execute("INSERT INTO D1 (review_id, topic_distribution) VALUES (%s, %s)", (i, distribution))
+    # Perform LDA for the negative subclass
+    X_negative = vectorizer.fit_transform(negative_df['Review Text'])
+    lda_negative = LatentDirichletAllocation(n_components=n_topics, random_state=42)
+    lda_negative.fit(X_negative)
 
-    # Compare the LDA results with WordCloud findings for overlaps and relevance.
-    #not able to import wordcloud and gensim
+    # Extract the top n_words per topic for both positive and negative subclasses
+    top_words_positive = []
+    top_words_negative = []
+
+    for topic_idx, topic in enumerate(lda_positive.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_positive.append(top_words_for_topic)
+
+    print("Top positive words per topic:", top_words_positive)
+
+    for topic_idx, topic in enumerate(lda_negative.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_negative.append(top_words_for_topic)
+
+    print("Top negative words per topic:", top_words_negative)
 
 def classify_reviews(csv_filepath, stringify=False):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -377,6 +391,25 @@ def task7(csv_filepath):
 def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
+    def preprocess(text):
+        # remove pipes people use to separate sentences
+        text = text.replace('|', '')
+
+        # fix some individual character(s) noticed manually
+        text = text.replace('\x94', '"')
+
+        # remove double spaces, add space after periods if missing
+        # source: https://stackoverflow.com/a/29507362
+        text = re.sub(r'\.(?! )', '. ', re.sub(r' +', ' ', text))
+
+        # remove spaces around forward slashes
+        text = re.sub(r'(?:(?<=\/) | (?=\/))','', text)
+
+        # tokenize sentence words
+        words = word_tokenize(text)
+
+        return words
+
     cat_freq_pos = {}
     cat_freq_neg = {}
 
@@ -385,13 +418,17 @@ def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
         common_categories = common_categories_ontology.keys()
         for c in common_categories:
             synset = common_categories_ontology[c]['synonyms']
+            synset.extend(common_categories_ontology[c]['hypernyms'])
+            synset.extend(common_categories_ontology[c]['hyponyms'])
             synset.append(c)
-            fd_pos = FreqDist(token.lower() for token in word_tokenize(positive_reviews_text) if token.lower() in synset)
-            fd_neg = FreqDist(token.lower() for token in word_tokenize(negative_reviews_text) if token.lower() in synset)
+            fd_pos = FreqDist(token.lower() for token in preprocess(positive_reviews_text) if token.lower() in synset)
+            fd_neg = FreqDist(token.lower() for token in preprocess(negative_reviews_text) if token.lower() in synset)
             cat_freq_pos[c] = fd_pos.N()
             cat_freq_neg[c] = fd_neg.N()
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(5,4))
+    ax1.set_ylim(0, 800)
+    ax2.set_ylim(0, 800)
     bar_pos = ax1.bar(cat_freq_pos.keys(), cat_freq_pos.values())
     bar_neg = ax2.bar(cat_freq_neg.keys(), cat_freq_neg.values())
     ax1.set_title('Category Occurrence (Positive Reviews)', fontsize=7)
@@ -404,19 +441,30 @@ def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
 def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
-    def preprocess(text, remove_stopwords=False, stemming=False):
-        words = word_tokenize(text)
-        words = [w.lower() for w in words]
-        if remove_stopwords:
-            s_words = stopwords.words('english')
-            words = [w for w in words if not w in s_words]
-        return words
+    def preprocess(text):
+        # remove pipes people use to separate sentences
+        text = text.replace('|', '')
 
-    positive_reviews_text_processed = preprocess(positive_reviews_text, remove_stopwords=True)
-    negative_reviews_text_processed = preprocess(negative_reviews_text, remove_stopwords=True)
+        # fix some individual character(s) noticed manually
+        text = text.replace('\x94', '"')
 
-    positive_reviews_text_tagged = pos_tag(positive_reviews_text_processed)
-    negative_reviews_text_tagged = pos_tag(negative_reviews_text_processed)
+        # remove double spaces, add space after periods if missing
+        # source: https://stackoverflow.com/a/29507362
+        text = re.sub(r'\.(?! )', '. ', re.sub(r' +', ' ', text))
+
+        # remove spaces around forward slashes
+        text = re.sub(r'(?:(?<=\/) | (?=\/))','', text)
+
+        # tokenize sentences
+        sentences = sent_tokenize(text)
+
+        # tokenize sentence words
+        sentences = [word_tokenize(sent) for sent in sentences]
+
+        return sentences
+
+    tokenized_sentences_pos = preprocess(positive_reviews_text)
+    tokenized_sentences_neg = preprocess(negative_reviews_text)
 
     def read_lexicon(filename):
         with open('data/hu_liu_lexicon/' + filename, 'r', errors='replace') as lexicon_file:
@@ -424,52 +472,91 @@ def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_f
         print(f'# of words in lexicon \'{filename}\': {len(words)}')
         return words
 
-    # Consider only those lexicon words that are contained in the review texts
-    lexicon_words_positive = [w for w in read_lexicon('positive-words.txt') if w in positive_reviews_text_processed]
-    lexicon_words_negative = [w for w in read_lexicon('negative-words.txt') if w in negative_reviews_text_processed]
+    def read_and_filter_lexicon(filename, tokenized_sentences_filter):
+        filtered_lexicon = []
+        for w in read_lexicon(filename):
+            for sent in tokenized_sentences_filter:
+                # compare against lowercase words, keep casing in the original sentence
+                sent_words = [w.lower() for w in sent]
+                if w in sent_words:
+                    filtered_lexicon.append(w)
+        return filtered_lexicon
     
-    def map_nouns_to_lexicon(tagged_tokens, lexicon_tokens):
+    # Consider only those lexicon words that are contained in the review texts
+    lexicon_words_pos = read_and_filter_lexicon('positive-words.txt', tokenized_sentences_pos)
+    lexicon_words_neg = read_and_filter_lexicon('negative-words.txt', tokenized_sentences_neg)
+
+    # POS tag sentences before stopword removal to preserve sentence context
+    tokenized_sentences_pos = pos_tag_sents(tokenized_sentences_pos)
+    tokenized_sentences_neg = pos_tag_sents(tokenized_sentences_neg)
+
+    # remove stop words
+    s_words = stopwords.words('english')
+    def remove_stopwords(tokenized_tagged_sentences):    
+        sentences_result = []
+        for sent in tokenized_tagged_sentences:
+            sentence_result = []
+            for (w, tag) in sent:
+                if w.lower() not in s_words: # lowercase comparison
+                    sentence_result.append((w, tag))
+            sentences_result.append(sentence_result)
+        return sentences_result
+
+    tokenized_sentences_pos = remove_stopwords(tokenized_sentences_pos)
+    tokenized_sentences_neg = remove_stopwords(tokenized_sentences_neg)
+    
+    def map_nouns_to_lexicon(tagged_sentences, lexicon_tokens):
         nouns_to_adjectives = {}
         for (lidx, lw) in enumerate(lexicon_tokens):
-            for (ridx, (rw, tag)) in enumerate(tagged_tokens):
-                if lw == rw:
-                    # check a 2-word window around the word
-                    for i in range(-2, 2):
-                        # skip the lexicon word itself
-                        if i == 0:
-                            continue
-                        # find a noun
-                        (w, t) = tagged_tokens[ridx - i]
-                        if t == 'NN':
-                            if lw in nouns_to_adjectives.keys():
-                                if w not in nouns_to_adjectives[lw]:
-                                    nouns_to_adjectives[lw].append(w)
-                            else:
-                                nouns_to_adjectives[lw] = [w]
-                            break # continue to next word after the first match
+            for (ridx, sent) in enumerate(tagged_sentences):
+                for (sidx, (rw, tag)) in enumerate(sent):
+                    if lw == rw.lower(): # lowercase comparison
+                        # check a 2-word window around the word
+                        for i in range(-2, 2):
+                            # skip the lexicon word itself
+                            if i == 0:
+                                continue
+                            # find a noun
+                            try:
+                                (w, t) = sent[sidx - i]
+                                if t == 'NN':
+                                    if lw in nouns_to_adjectives.keys():
+                                        if w not in nouns_to_adjectives[lw]:
+                                            nouns_to_adjectives[lw].append(w)
+                                    else:
+                                        nouns_to_adjectives[lw] = [w]
+                                    break # continue to next word after the first match
+                            except IndexError:
+                                pass
         return nouns_to_adjectives
 
-    nouns_to_adjectives_positive = map_nouns_to_lexicon(positive_reviews_text_tagged, lexicon_words_positive)
-    nouns_to_adjectives_negative = map_nouns_to_lexicon(negative_reviews_text_tagged, lexicon_words_negative)
+    nouns_to_adjectives_positive = map_nouns_to_lexicon(tokenized_sentences_pos, lexicon_words_pos)
+    nouns_to_adjectives_negative = map_nouns_to_lexicon(tokenized_sentences_neg, lexicon_words_neg)
 
-    # print(nouns_to_adjectives_positive)
-    # print(nouns_to_adjectives_negative)
-    datahandling.sql_execute("DROP TABLE IF EXISTS task12;", 'task12.db')
-    datahandling.sql_execute("""
-    CREATE TABLE task12 (
-        adj TEXT,
-        nouns TEXT,
-        UNIQUE(adj)
-    );
-    """, 'task12.db')
-    query = f'INSERT INTO task12 (adj, nouns) VALUES '
-    for (adj, noun_list) in nouns_to_adjectives_positive.items():
-        print(json.dumps(noun_list))
-        query += f"""('{adj}', '{json.dumps(noun_list)}'), """
-    query = query[:-2]
-    datahandling.sql_execute(query, 'task12.db')
-    return datahandling.fetch_data('task12', 'task12.db', 'SELECT * FROM task12')
-
+    db_name = 'task12.db'
+    def store(data, table):
+        datahandling.sql_execute(f"DROP TABLE IF EXISTS {table}", db_name)
+        datahandling.sql_execute(f"""
+        CREATE TABLE {table} (
+            adj TEXT,
+            nouns TEXT,
+            UNIQUE(adj)
+        )
+        """, db_name)
+        query = f"INSERT INTO {table} (adj, nouns) VALUES "
+        for (adj, noun_list) in data.items():
+            query += f"""('{adj}', '{json.dumps(noun_list, ensure_ascii=False).replace("'", "`")}'), """
+        query = query[:-2]
+        datahandling.sql_execute(query, db_name)
+        data = datahandling.fetch_data(table, db_name, f"SELECT * FROM {table}")
+        data_dict = {}
+        for (adj, nouns) in data:
+            data_dict[adj] = json.loads(nouns.replace("`", "'"))
+        return data_dict
+    
+    data_pos = store(nouns_to_adjectives_positive, 'task12_pos')
+    data_neg = store(nouns_to_adjectives_negative, 'task12_neg')
+    return (data_pos, data_neg)
 
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
@@ -478,7 +565,10 @@ if __name__ == '__main__':
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
+    #occurrence_of_positive_and_negative_words_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
+    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv')
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
-    pass
+    #pass
 
 
