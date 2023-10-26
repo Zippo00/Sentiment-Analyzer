@@ -8,3 +8,7 @@ wordcloud
 spacy
 nltk
 empath
+scipy
+scikit-learn
+sklearn
+gensim
