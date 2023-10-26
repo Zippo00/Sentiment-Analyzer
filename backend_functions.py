@@ -389,14 +389,35 @@ def task7(csv_filepath):
 
 # Task 11
 def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
-    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+    subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
+    subclasses = {}
+    for i in subclass_table:
+        subclasses[i[0]] = i[1]
+    negative_subclass_reviews = []
+    positive_subclass_reviews = []
+    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    for i in df.index:
+        if subclasses[df['Property Name'][i]] == 'None':
+            continue
+        elif subclasses[df['Property Name'][i]] == 'Negative':
+            negative_subclass_reviews.append(df['Review Text'][i])
+        elif subclasses[df['Property Name'][i]] == 'Positive':
+            positive_subclass_reviews.append(df['Review Text'][i])
+
+    print(f'Reviews of hotels in negative subclass: {len(negative_subclass_reviews)}')
+    print(f'Reviews of hotels in positive subclass: {len(positive_subclass_reviews)}')
+
+    positive_reviews_text = ' '.join(negative_subclass_reviews)
+    negative_reviews_text = ' '.join(positive_subclass_reviews)
 
     def preprocess(text):
         # remove pipes people use to separate sentences
         text = text.replace('|', '')
 
         # fix some individual character(s) noticed manually
+        text = text.replace('\x92', "'")
         text = text.replace('\x94', '"')
+        text = text.replace('\x96', 'û')
 
         # remove double spaces, add space after periods if missing
         # source: https://stackoverflow.com/a/29507362
@@ -427,26 +448,47 @@ def occurrence_of_positive_and_negative_words_in_ambiguous_class(csv_filepath):
             cat_freq_neg[c] = fd_neg.N()
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(5,4))
-    ax1.set_ylim(0, 800)
-    ax2.set_ylim(0, 800)
     bar_pos = ax1.bar(cat_freq_pos.keys(), cat_freq_pos.values())
     bar_neg = ax2.bar(cat_freq_neg.keys(), cat_freq_neg.values())
     ax1.set_title('Category Occurrence (Positive Reviews)', fontsize=7)
     ax2.set_title('Category Occurrence (Negative Reviews)', fontsize=7)
-    #plt.show()
+    plt.show()
     #Change matplotlib graph to plotly graph and return it
     return tls.mpl_to_plotly(fig)
 
 # Task 12
 def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_filepath):
-    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+    subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
+    subclasses = {}
+    for i in subclass_table:
+        subclasses[i[0]] = i[1]
+    negative_subclass_reviews = []
+    positive_subclass_reviews = []
+    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    for i in df.index:
+        if subclasses[df['Property Name'][i]] == 'None':
+            continue
+        elif subclasses[df['Property Name'][i]] == 'Negative':
+            negative_subclass_reviews.append(df['Review Text'][i])
+        elif subclasses[df['Property Name'][i]] == 'Positive':
+            positive_subclass_reviews.append(df['Review Text'][i])
+
+    print(f'Reviews of hotels in negative subclass: {len(negative_subclass_reviews)}')
+    print(f'Reviews of hotels in positive subclass: {len(positive_subclass_reviews)}')
+
+    positive_reviews_text = ' '.join(negative_subclass_reviews)
+    negative_reviews_text = ' '.join(positive_subclass_reviews)
 
     def preprocess(text):
+        print('Preprocessing...')
+
         # remove pipes people use to separate sentences
         text = text.replace('|', '')
 
         # fix some individual character(s) noticed manually
+        text = text.replace('\x92', "'")
         text = text.replace('\x94', '"')
+        text = text.replace('\x96', 'û')
 
         # remove double spaces, add space after periods if missing
         # source: https://stackoverflow.com/a/29507362
@@ -483,14 +525,17 @@ def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_f
         return filtered_lexicon
     
     # Consider only those lexicon words that are contained in the review texts
+    print('Filtering lexicon...')
     lexicon_words_pos = read_and_filter_lexicon('positive-words.txt', tokenized_sentences_pos)
     lexicon_words_neg = read_and_filter_lexicon('negative-words.txt', tokenized_sentences_neg)
 
     # POS tag sentences before stopword removal to preserve sentence context
+    print('POS tagging sentences')
     tokenized_sentences_pos = pos_tag_sents(tokenized_sentences_pos)
     tokenized_sentences_neg = pos_tag_sents(tokenized_sentences_neg)
 
     # remove stop words
+    print('Removing stop words...')
     s_words = stopwords.words('english')
     def remove_stopwords(tokenized_tagged_sentences):    
         sentences_result = []
@@ -530,6 +575,7 @@ def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_f
                                 pass
         return nouns_to_adjectives
 
+    print('Mapping nouns to lexicon...')
     nouns_to_adjectives_positive = map_nouns_to_lexicon(tokenized_sentences_pos, lexicon_words_pos)
     nouns_to_adjectives_negative = map_nouns_to_lexicon(tokenized_sentences_neg, lexicon_words_neg)
 
@@ -554,8 +600,15 @@ def identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class(csv_f
             data_dict[adj] = json.loads(nouns.replace("`", "'"))
         return data_dict
     
+    print('Storing data...')
     data_pos = store(nouns_to_adjectives_positive, 'task12_pos')
     data_neg = store(nouns_to_adjectives_negative, 'task12_neg')
+
+    # print('\nPOSITIVE:')
+    # print(data_pos)
+    # print('\nNEGATIVE:')
+    # print(data_neg)
+
     return (data_pos, data_neg)
 
 if __name__ == '__main__':
