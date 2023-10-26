@@ -9,8 +9,9 @@ from matplotlib import pyplot as plt
 from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
+from sklearn.decomposition import LatentDirichletAllocation
 from wordcloud import WordCloud
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import  CountVectorizer
 from gensim import corpora, models
 import datahandling
 import spacy
@@ -221,7 +222,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     return tls.mpl_to_plotly(fig)
 
 #Task 5
-def task5(csv_filepath):
+def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
     # WordCloud for the positive subclass
@@ -246,7 +247,7 @@ def task5(csv_filepath):
 
 def task5_plotly(csv_filepath):
     '''
-    Same as task5 -function, but outputs the WordCloud figures as plotly figures, 
+    Same as task5 -function, but outputs the WordCloud figures as plotly figures,
     instead of matplotlib.
     :param csv_filepath: (str) Filepath to .csv file to extract the data to analyze from.
     :return: (fig) Returns two plotly figures.
@@ -257,52 +258,64 @@ def task5_plotly(csv_filepath):
     return fig1, fig2
 
 #Task 6
-def proportion_of_positive_and_negative_subclass_in_ambiguous_class2(csv_filepath):
-    (positive_reviews, negative_reviews) = classify_reviews(csv_filepath, stringify=False)
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath):
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
 
-    # Create a DataFrame for each subclass
-    positive_df = pd.DataFrame({'Review': positive_reviews, 'Sentiment': 'positive'})
-    negative_df = pd.DataFrame({'Review': negative_reviews, 'Sentiment': 'negative'})
-    # Combine the data into a single DataFrame
-    combined_df = pd.concat([positive_df, negative_df], ignore_index=True)
-
-    # Preprocess the text data using spaCy
-    nlp = spacy.load("en_core_web_sm")
     def preprocess_text(text):
-        doc = nlp(text)
-        tokens = [token.lemma_ for token in doc if not token.is_punct]
-        return " ".join(tokens)
+        # Tokenize the text
+        words = word_tokenize(text)
 
-    combined_df['Preprocessed Review'] = combined_df['Review'].apply(preprocess_text)
+        # Remove punctuation and convert to lowercase
+        words = [word.lower() for word in words if word.isalpha()]
 
-    #  Initialize a TF-IDF vectorizer and Vectorize the Text
-    tfidf_vectorizer = TfidfVectorizer(max_df=0.9, min_df=2, stop_words='english')
+        # Remove stopwords
+        words = [word for word in words if word not in stopwords.words('english')]
 
-    # Fit and transform the preprocessed text data
-    tfidf_matrix = tfidf_vectorizer.fit_transform(combined_df['Preprocessed Review'])
-    sparse.save_npz('tfidf_matrix.npz', sparse.csr_matrix(tfidf_matrix))
+        # Join the words back into a clean text
+        cleaned_text = ' '.join(words)
 
-    tfidf_matrix = sparse.load_npz('tfidf_matrix.npz')
+        return cleaned_text
 
-    # Convert the TF-IDF matrix to a Gensim corpus
-    corpus = corpora.MmCorpus(sparse.csr_matrix(tfidf_matrix))
+    # Apply the preprocessing function to the "Review Text" column
+    df['Review Text'] = df['Review Text'].apply(preprocess_text)
 
-    # Apply LDA
-    num_topics = 5  # Number of topics
-    lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=tfidf_vectorizer.get_feature_names_out(),
-                                passes=15)
+    positive_df = df[df['Subclass'] == 'Positive']
+    negative_df = df[df['Subclass'] == 'Negative']
 
-    # use the lda_model and corpus to get topic distributions for each review, Store this information in your database D1
+    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
 
-    # Store the topic distribution for each review
-    topic_distributions = [lda_model[review] for review in corpus]
-    print(topic_distributions)
+    # Perform LDA for the positive subclass
+    X_positive = vectorizer.fit_transform(positive_df['Review Text'])
+    n_topics = 5  # Number of topics
+    n_words = 5  # Number of words per topic
+    lda_positive = LatentDirichletAllocation(n_components=n_topics, random_state=42)
+    lda_positive.fit(X_positive)
+    print(lda_positive)
 
-    for i, distribution in enumerate(topic_distributions):
-        datahandling.sql_execute("INSERT INTO D1 (review_id, topic_distribution) VALUES (%s, %s)", (i, distribution))
+    # Perform LDA for the negative subclass
+    X_negative = vectorizer.fit_transform(negative_df['Review Text'])
+    lda_negative = LatentDirichletAllocation(n_components=n_topics, random_state=42)
+    lda_negative.fit(X_negative)
 
-    # Compare the LDA results with WordCloud findings for overlaps and relevance.
-    #not able to import wordcloud and gensim
+    # Extract the top n_words per topic for both positive and negative subclasses
+    top_words_positive = []
+    top_words_negative = []
+
+    for topic_idx, topic in enumerate(lda_positive.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_positive.append(top_words_for_topic)
+
+    print("Top positive words per topic:", top_words_positive)
+
+    for topic_idx, topic in enumerate(lda_negative.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_negative.append(top_words_for_topic)
+
+    print("Top negative words per topic:", top_words_negative)
 
 def classify_reviews(csv_filepath, stringify=False):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -552,7 +565,9 @@ if __name__ == '__main__':
     # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
-    occurrence_of_positive_and_negative_words_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #occurrence_of_positive_and_negative_words_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
+    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv')
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
     #pass
 
