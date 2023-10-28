@@ -11,9 +11,8 @@ from scipy import stats, sparse
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
 from sklearn.decomposition import LatentDirichletAllocation
-#from wordcloud import WordCloud
+from wordcloud import WordCloud
 from sklearn.feature_extraction.text import  CountVectorizer
-#from gensim import corpora, models
 import datahandling
 import spacy
 import json
@@ -53,59 +52,59 @@ def store_sent_score(csv_filepath, db_table, db):
     #Execute query
     datahandling.sql_execute(query, db)
 
-# def plotly_wordcloud(text):
-#     '''
-#     Generates a Plotly WordCloud figure from the given text.
-#     :param text: (str) Text to generate WordCloud from.
-#     :return: (fig) Plotly figure.
-#     '''
-#     wc = WordCloud(width=800, height=400, background_color='white')
-#     wc.generate(text)
-#
-#     word_list=[]
-#     freq_list=[]
-#     fontsize_list=[]
-#     position_list=[]
-#     orientation_list=[]
-#     color_list=[]
-#
-#     for (word, freq), fontsize, position, orientation, color in wc.layout_:
-#         word_list.append(word)
-#         freq_list.append(freq)
-#         fontsize_list.append(fontsize)
-#         position_list.append(position)
-#         orientation_list.append(orientation)
-#         color_list.append(color)
-#
-#     # get the positions
-#     x=[]
-#     y=[]
-#     for i in position_list:
-#         x.append(i[0])
-#         y.append(i[1])
-#
-#     # get the relative occurence frequencies
-#     new_freq_list = []
-#     for i in freq_list:
-#         new_freq_list.append(i*100)
-#     new_freq_list
-#
-#     trace = go.Scatter(x=x,
-#                        y=y,
-#                        textfont = dict(size=new_freq_list,
-#                                        color=color_list),
-#                        hoverinfo='text',
-#                        hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
-#                        mode='text',
-#                        text=word_list
-#                       )
-#
-#     layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
-#                         'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
-#
-#     fig = go.Figure(data=[trace], layout=layout)
-#
-#     return fig
+def plotly_wordcloud(text):
+    '''
+    Generates a Plotly WordCloud figure from the given text.
+    :param text: (str) Text to generate WordCloud from.
+    :return: (fig) Plotly figure.
+    '''
+    wc = WordCloud(width=800, height=400, background_color='white')
+    wc.generate(text)
+
+    word_list=[]
+    freq_list=[]
+    fontsize_list=[]
+    position_list=[]
+    orientation_list=[]
+    color_list=[]
+
+    for (word, freq), fontsize, position, orientation, color in wc.layout_:
+        word_list.append(word)
+        freq_list.append(freq)
+        fontsize_list.append(fontsize)
+        position_list.append(position)
+        orientation_list.append(orientation)
+        color_list.append(color)
+
+    # get the positions
+    x=[]
+    y=[]
+    for i in position_list:
+        x.append(i[0])
+        y.append(i[1])
+
+    # get the relative occurence frequencies
+    new_freq_list = []
+    for i in freq_list:
+        new_freq_list.append(i*100)
+    new_freq_list
+
+    trace = go.Scatter(x=x,
+                       y=y,
+                       textfont = dict(size=new_freq_list,
+                                       color=color_list),
+                       hoverinfo='text',
+                       hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
+                       mode='text',
+                       text=word_list
+                      )
+
+    layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
+                        'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
+
+    fig = go.Figure(data=[trace], layout=layout)
+
+    return fig
 
 # Task 2
 # correlation of the overall sentiment score of each review with the user’s rating
@@ -167,8 +166,8 @@ def construct_histogram_for_star_categories(csv_filepath):
     plt.xlabel("Review Rating")
     plt.ylabel("Proportion of Hotels with High Standard Deviation")
     plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
-    plt.show()
-    #return tls.mpl_to_plotly(fig)
+    # plt.show()
+    return tls.mpl_to_plotly(fig)
 
 # Task 4
 def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath, db_table, db):
@@ -222,41 +221,41 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     # Change the matplotlib figure into a Plotly figure and return it
     return tls.mpl_to_plotly(fig)
 
-#Task 5
-# def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used(csv_filepath):
-#     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
-#
-#     # WordCloud for the positive subclass
-#     positive_wordcloud = WordCloud(width=250, height=150, background_color='white').generate(positive_reviews_text)
-#
-#     # WordCloud for the negative subclass
-#     negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
-#
-#     # WordCloud for the positive subclass
-#     plt.figure(figsize=(10, 5))
-#     plt.imshow(positive_wordcloud, interpolation='bilinear')
-#     plt.title('WordCloud for Positive Subclass')
-#     plt.axis('off')
-#     plt.show()
-#
-#     # WordCloud for the negative subclass
-#     plt.figure(figsize=(10, 5))
-#     plt.imshow(negative_wordcloud, interpolation='bilinear')
-#     plt.title('WordCloud for Negative Subclass')
-#     plt.axis('off')
-#     plt.show()
+Task 5
+def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used(csv_filepath):
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
-# def task5_plotly(csv_filepath):
-#     '''
-#     Same as task5 -function, but outputs the WordCloud figures as plotly figures,
-#     instead of matplotlib.
-#     :param csv_filepath: (str) Filepath to .csv file to extract the data to analyze from.
-#     :return: (fig) Returns two plotly figures.
-#     '''
-#     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
-#     fig1 = plotly_wordcloud(positive_reviews_text)
-#     fig2 = plotly_wordcloud(negative_reviews_text)
-#     return fig1, fig2
+    # WordCloud for the positive subclass
+    positive_wordcloud = WordCloud(width=250, height=150, background_color='white').generate(positive_reviews_text)
+
+    # WordCloud for the negative subclass
+    negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
+
+    # WordCloud for the positive subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(positive_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Positive Subclass')
+    plt.axis('off')
+    plt.show()
+
+    # WordCloud for the negative subclass
+    plt.figure(figsize=(10, 5))
+    plt.imshow(negative_wordcloud, interpolation='bilinear')
+    plt.title('WordCloud for Negative Subclass')
+    plt.axis('off')
+    plt.show()
+
+def task5_plotly(csv_filepath):
+    '''
+    Same as task5 -function, but outputs the WordCloud figures as plotly figures,
+    instead of matplotlib.
+    :param csv_filepath: (str) Filepath to .csv file to extract the data to analyze from.
+    :return: (fig) Returns two plotly figures.
+    '''
+    (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
+    fig1 = plotly_wordcloud(positive_reviews_text)
+    fig2 = plotly_wordcloud(negative_reviews_text)
+    return fig1, fig2
 
 #Task 6
 def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath, db_table, db):
