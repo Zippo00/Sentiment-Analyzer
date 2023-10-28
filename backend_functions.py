@@ -1,6 +1,7 @@
 '''
 Functions for Review Sentiment Analyzer
 '''
+import operator
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
@@ -20,7 +21,7 @@ from empath import Empath
 import nltk
 from nltk import sent_tokenize, word_tokenize, pos_tag, pos_tag_sents
 from nltk.probability import FreqDist
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, brown
 from nltk.tree import *
 import re
 
@@ -348,6 +349,7 @@ def classify_reviews(csv_filepath, stringify=False):
         return (positive_reviews_text, negative_reviews_text)
     return (positive_reviews, negative_reviews)
 
+#Task 7
 def task7(csv_filepath):
     '''
     Generate categories with Empath Client for reviews of hotels that belong to
@@ -362,7 +364,7 @@ def task7(csv_filepath):
         subclasses[i[0]] = i[1]
     negative_subclass_reviews = []
     positive_subclass_reviews = []
-    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
     for i in df.index:
         if subclasses[df['Property Name'][i]] == 'None':
             continue
@@ -396,6 +398,77 @@ def task7(csv_filepath):
         json.dump(neg_subclass_empath_cats, f, sort_keys=True, indent=4)
     with open('data/pos_subclass_empath_cats.json', 'w') as f:
         json.dump(pos_subclass_empath_cats, f, sort_keys=True, indent=4)
+
+#Task 8
+def task8():
+    '''
+    Calculates the ratio of overlapping between Empath Categories generated
+    for the hotel reviews belonging to 'Positive' and 'Negative' subclasses,
+    and Empath Categories generated for the Brown Corpus.
+    '''
+    def save_brown_empaths():
+        '''
+        Generates Empath categories for the Brown corpus, 
+        removes any categories with a value of zero, and 
+        stores the results into a json file in the 'data'-folder.
+        '''
+        lexicon = Empath()
+        # Check that the brown corpus is downloaded & extract all sentences in Brown Reviews corpus
+        try:
+            brown_sents = list(brown.sents(categories=['reviews']))
+        except LookupError:
+            nltk.download('brown')
+            brown_sents = list(brown.sents(categories=['reviews']))
+        brown_reviews_corpus = []
+        for sentence in brown_sents:
+            brown_reviews_corpus.append(' '.join(sentence))
+        #Generate Empath categories
+        brown_empath_cats = lexicon.analyze(brown_reviews_corpus, normalize=True)
+        # Remove any categories with a zero value
+        to_remove=[]
+        for i in brown_empath_cats.items():
+            if i[1] == 0.0:
+                print(i)
+                to_remove.append(i[0])
+        for i in to_remove:
+            brown_empath_cats.pop(i)
+        # Store results as json files
+        with open('data/brown_empath_cats.json', 'w') as f:
+            json.dump(brown_empath_cats, f, sort_keys=True, indent=4)
+
+    # Try to get the empath cats for Brown corpus
+    try:
+        with open('data/brown_empath_cats.json', 'r') as f:
+            brown_empaths = json.load(f)
+    # Generate them if file not found
+    except FileNotFoundError:
+        save_brown_empaths()
+        with open('data/brown_empath_cats.json', 'r') as f:
+            brown_empaths = json.load(f)
+    # Get the empath cats for 'Positive' & 'Negative' subclasses
+    with open('data/neg_subclass_empath_cats.json', 'r') as f:
+        neg_empaths = json.load(f)
+    with open('data/pos_subclass_empath_cats.json', 'r') as f:
+        pos_empaths = json.load(f)
+    # Calculate the overlapping ratio between empath categories of 'Positive' & 'Negative'
+    # subclasses and Brown Reviews
+    pos_overlaps = 0
+    pos_overlap_cats = []
+    neg_overlaps = 0
+    neg_overlap_cats = []
+    # Logic for overlapping: If the normalized weight for the category is over 0.001 in both, brown and positive/negative empaths,
+    # the category is considered to be overlapping
+    for empath in brown_empaths.keys():
+        if ((brown_empaths[empath] > 0.001) and (pos_empaths[empath] > 0.001)):
+            pos_overlaps += 1
+            pos_overlap_cats.append(empath)
+        if ((brown_empaths[empath] > 0.001) and (neg_empaths[empath] > 0.001)):
+            neg_overlaps += 1
+            neg_overlap_cats.append(empath)
+    pos_overlap_ratio = pos_overlaps / len(pos_empaths) * 100
+    neg_overlap_ratio = neg_overlaps / len(neg_empaths) * 100
+    print(f'Ratio of Empath categories overlapping between "Brown Reviews Corpus" & "Positive Subclass Reviews": {pos_overlap_ratio:.2f} %\
+        \nRatio of Empath categories overlapping between "Brown Reviews Corpus" & "Negative Subclass Reviews": {neg_overlap_ratio:.2f} %')
 
 # Task 11
 def occurrence_of_positive_and_negative_words(csv_filepath):
