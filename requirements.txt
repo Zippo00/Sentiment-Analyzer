@@ -10,5 +10,4 @@ nltk
 empath
 scipy
 scikit-learn
-sklearn
 gensim

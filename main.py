@@ -62,16 +62,18 @@ def calculate():
 -Hotels with High Standard Deviation tend to have more variable ratings."
         elif calculation =='task6':
             pass
-        elif calculation =='task7':
-            pass
         elif calculation =='task8':
-            pass
+            pos_overlapping_ratio, neg_overlapping_ratio = backend_functions.task8()
+            result = f'Comparing the Empath Categories generated for the reviews that belong to either "Positive" or "Negative" subclass, and the Empath Categories generated for Brown Reviews Corpus, \
+the overlapping ratios were the following:\n\nRatio of Empath categories overlapping between "Brown Reviews Corpus" & "Positive Subclass Reviews": {pos_overlapping_ratio:.2f} %\nRatio of Empath categories \
+overlapping between "Brown Reviews Corpus" & "Negative Subclass Reviews": {neg_overlapping_ratio:.2f} %\n\nThe logic used to consider categories to be overlapping: If the normalized weight for the category \
+is over 0.001 in both, brown and positive/negative empaths, the category is considered to be overlapping.'
         elif calculation =='task9':
             pass
         elif calculation =='task12':
             result = "Some of the associations can lead to evaluation errors if taken at face value. For example, is the pair 'cheapest - choice' really always a positive thing?\n\
-            Similarly, the adjectives 'adequate' & 'decent' could belong to either class.\
-            As per the common categories in task 11, 'room' was clearly the most commonly rated aspect, associated with multiple different adjectives."
+Similarly, the adjectives 'adequate' & 'decent' could belong to either class.\n\
+As per the common categories in task 11, 'room' was clearly the most commonly rated aspect, associated with multiple different adjectives."
     else:
         return json.dumps("This part of the application is not developed yet. Try with a different dataset.")
     if not result:

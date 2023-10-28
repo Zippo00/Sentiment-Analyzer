@@ -181,8 +181,8 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
     std_deviation_threshold = 1.0
     hotel_stats = df.groupby('Property Name')['Review Rating'].agg(['std', 'mean']).reset_index()
-    print(hotel_stats)
-    print(hotel_stats['Property Name'])
+    #print(hotel_stats)
+    #print(hotel_stats['Property Name'])
 
     def determine_subclass(row):
         if row['std'] > std_deviation_threshold:
@@ -195,7 +195,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
             return None
 
     hotel_stats['Subclass'] = hotel_stats.apply(determine_subclass, axis=1)
-    print(hotel_stats)
+    #print(hotel_stats)
 
     queryToCreateTable = f"""CREATE TABLE IF NOT EXISTS {db_table} (property_name text PRIMARY KEY, sub_class text NOT NULL)"""
     insert_query = f"INSERT INTO {db_table} VALUES"
@@ -231,7 +231,7 @@ def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
     # WordCloud for the positive subclass
-    positive_wordcloud = WordCloud(width=250, height=150, background_color='white').generate(positive_reviews_text)
+    positive_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews_text)
 
     # WordCloud for the negative subclass
     negative_wordcloud = WordCloud(width=800, height=400, background_color='white').generate(negative_reviews_text)
@@ -262,8 +262,106 @@ def task5_plotly(csv_filepath):
     fig2 = plotly_wordcloud(negative_reviews_text)
     return fig1, fig2
 
-#Task 6
-def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath, db_table, db):
+#Task 6 NEW IMPLEMENTATION
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass():
+    '''
+    Function to perform Task 6
+    '''
+    def preprocess(text):
+        '''
+        Preprocesses given text
+        :param text: (str) Text to preprocess.
+        :return: (str) Preprocessed text.
+        '''
+        # remove pipes people use to separate sentences
+        text = text.replace('|', '')
+        # fix some individual character(s) noticed manually
+        text = text.replace('\x92', "'")
+        text = text.replace('\x94', '"')
+        text = text.replace('\x96', 'û')
+        # remove double spaces, add space after periods if missing
+        # source: https://stackoverflow.com/a/29507362
+        text = re.sub(r'\.(?! )', '. ', re.sub(r' +', ' ', text))
+        # remove spaces around forward slashes
+        text = re.sub(r'(?:(?<=\/) | (?=\/))','', text)
+        # Tokenize the text
+        words = word_tokenize(text)
+        # Remove punctuation and convert to lowercase
+        words = [word.lower() for word in words if word.isalpha()]
+        # Remove stopwords
+        words = [word for word in words if word not in stopwords.words('english')]
+        # Join the words back into a clean text
+        cleaned_text = ' '.join(words)
+        return cleaned_text
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    #Fetch the Subclass table
+    subclass_table = datahandling.fetch_data('subclass_table', 'D1.db')
+    subclasses = {}
+    for i in subclass_table:
+        subclasses[i[0]] = i[1]
+    negative_subclass_reviews = []
+    positive_subclass_reviews = []
+    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    # Take all reviews that belong to 'Positive' or 'Negative' subclass
+    for i in df.index:
+        if subclasses[df['Property Name'][i]] == 'None':
+            continue
+        elif subclasses[df['Property Name'][i]] == 'Negative':
+            negative_subclass_reviews.append(df['Review Text'][i])
+        elif subclasses[df['Property Name'][i]] == 'Positive':
+            positive_subclass_reviews.append(df['Review Text'][i])
+
+    print(f'Reviews of hotels in negative subclass: {len(negative_subclass_reviews)}')
+    print(f'Reviews of hotels in positive subclass: {len(positive_subclass_reviews)}')
+
+    print('Starting to preprocess Negative subclass...')
+    negative_subclass_reviews = list(map(preprocess, negative_subclass_reviews)) # PREPROCESSED REVIEWS THAT BELONG TO NEGATIVE SUBCLASS ARE IN THIS VARIABLE
+    print('Preprocessing Negative Subclass finished!')
+    print('Starting to preprocess Positive subclass...')
+    positive_subclass_reviews = list(map(preprocess, positive_subclass_reviews)) # PREPROCESSED REVIEWS THAT BELONG TO POSITIVE SUBCLASS ARE IN THIS VARIABLE
+
+    #all_preprocessed_reviews = negative_subclass_reviews.extend(positive_subclass_reviews)
+
+    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+    pos_vector = vectorizer.fit_transform(positive_subclass_reviews)
+    neg_vector = vectorizer.fit_transform(negative_subclass_reviews)
+
+    # Fit LDA for positive subclass
+    lda_positive = LatentDirichletAllocation(n_components=5, random_state=42)
+    lda_positive.fit(pos_vector)
+
+    # Fit LDA for negative subclass
+    lda_negative = LatentDirichletAllocation(n_components=5, random_state=42)
+    lda_negative.fit(neg_vector)
+
+    # Extract the top words per topic for both positive and negative subclasses
+    top_words_positive = []
+    top_words_negative = []
+
+    n_words = 5  # Number of top words to extract per topic
+
+    for topic_idx, topic in enumerate(lda_positive.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_positive.append(top_words_for_topic)
+
+    for topic_idx, topic in enumerate(lda_negative.components_):
+        top_n_words_idx = topic.argsort()[-n_words:][::-1]
+        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
+        top_words_negative.append(top_words_for_topic)
+
+    # Print top words for positive and negative topics
+    print("Top positive words per topic:", top_words_positive)
+    print("Top negative words per topic:", top_words_negative)
+    #Save the results as json files - *YOU CAN CHANGE THESE TO INSTEAD STORE THE RESULTS IN THE DATABASE
+    with open('data/top_words_positive.json', 'w') as f:
+            json.dump(top_words_positive, f, sort_keys=True, indent=4)
+    with open('data/top_words_negative.json', 'w') as f:
+            json.dump(top_words_negative, f, sort_keys=True, indent=4)
+
+#Task 6 OLD IMPLEMENTATION - 
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass_OLD(csv_filepath, db_table, db):
     nltk.download('punkt')
     nltk.download('stopwords')
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -331,6 +429,8 @@ def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_f
     # Insert the top words for positive and negative subclasses
     insert_top_words(db, 'top_words_positive', top_words_positive)
     insert_top_words(db, 'top_words_negative', top_words_negative)
+
+
 
 def classify_reviews(csv_filepath, stringify=False):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
@@ -473,6 +573,7 @@ def task8():
     neg_overlap_ratio = neg_overlaps / len(neg_empaths) * 100
     print(f'Ratio of Empath categories overlapping between "Brown Reviews Corpus" & "Positive Subclass Reviews": {pos_overlap_ratio:.2f} %\
         \nRatio of Empath categories overlapping between "Brown Reviews Corpus" & "Negative Subclass Reviews": {neg_overlap_ratio:.2f} %')
+    return pos_overlap_ratio, neg_overlap_ratio
 
 # Task 11
 def occurrence_of_positive_and_negative_words(csv_filepath):
@@ -482,7 +583,7 @@ def occurrence_of_positive_and_negative_words(csv_filepath):
         subclasses[i[0]] = i[1]
     negative_subclass_reviews = []
     positive_subclass_reviews = []
-    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
     for i in df.index:
         if subclasses[df['Property Name'][i]] == 'None':
             continue
