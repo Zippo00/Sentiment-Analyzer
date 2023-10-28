@@ -21,7 +21,7 @@ from empath import Empath
 import nltk
 from nltk import sent_tokenize, word_tokenize, pos_tag, pos_tag_sents
 from nltk.probability import FreqDist
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, brown
 from nltk.tree import *
 import re
 
@@ -344,7 +344,7 @@ def task7(csv_filepath):
         subclasses[i[0]] = i[1]
     negative_subclass_reviews = []
     positive_subclass_reviews = []
-    df = pd.read_csv('data/London_hotel_reviews.csv', encoding = "ISO-8859-1")
+    df = pd.read_csv(csv_filepath, encoding = "ISO-8859-1")
     for i in df.index:
         if subclasses[df['Property Name'][i]] == 'None':
             continue
@@ -393,14 +393,12 @@ def task8():
         stores the results into a json file in the 'data'-folder.
         '''
         lexicon = Empath()
-        # Check that the brown corpus is downloaded
+        # Check that the brown corpus is downloaded & extract all sentences in Brown Reviews corpus
         try:
-            brown_categories = brown.categories()
+            brown_sents = list(brown.sents(categories=['reviews']))
         except LookupError:
             nltk.download('brown')
-            brown_categories = brown.categories()
-        #Extract all sentences in Brown Reviews corpus
-        brown_sents = list(brown.sents(categories=['reviews']))
+            brown_sents = list(brown.sents(categories=['reviews']))
         brown_reviews_corpus = []
         for sentence in brown_sents:
             brown_reviews_corpus.append(' '.join(sentence))
@@ -415,7 +413,6 @@ def task8():
         for i in to_remove:
             brown_empath_cats.pop(i)
         # Store results as json files
-        print('Brown Empath Categories:\n', brown_empath_cats)
         with open('data/brown_empath_cats.json', 'w') as f:
             json.dump(brown_empath_cats, f, sort_keys=True, indent=4)
 
@@ -437,7 +434,6 @@ def task8():
     # subclasses and Brown Reviews
     pos_overlaps = 0
     pos_overlap_cats = []
-    neg_cats_len = len(neg_empaths)
     neg_overlaps = 0
     neg_overlap_cats = []
     # Logic for overlapping: If the normalized weight for the category is over 0.001 in both, brown and positive/negative empaths,
