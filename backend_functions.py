@@ -258,63 +258,53 @@ def task5_plotly(csv_filepath):
     return fig1, fig2
 
 #Task 6
-def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath):
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass(csv_filepath, db_table, db):
     nltk.download('punkt')
     nltk.download('stopwords')
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
+    print(df)
 
-    def preprocess_text(text):
-        # Tokenize the text
-        words = word_tokenize(text)
+    query = f"""SELECT sub_class, property_name FROM {db_table} WHERE sub_class IS NOT NULL"""
+    subclass_data = datahandling.fetch_data(db_table, db, query)
+    print(subclass_data)
 
-        # Remove punctuation and convert to lowercase
-        words = [word.lower() for word in words if word.isalpha()]
+    columns = ['sub_class', 'Property Name']
 
-        # Remove stopwords
-        words = [word for word in words if word not in stopwords.words('english')]
-
-        # Join the words back into a clean text
-        cleaned_text = ' '.join(words)
-
-        return cleaned_text
-
-    # Apply the preprocessing function to the "Review Text" column
-    df['Review Text'] = df['Review Text'].apply(preprocess_text)
-
-    positive_df = df[df['Subclass'] == 'Positive']
-    negative_df = df[df['Subclass'] == 'Negative']
+    df = pd.merge(df, pd.DataFrame(subclass_data, columns=columns), on='Property Name', how='left')
+    positive_df = df[df['sub_class'] == 'Positive']
+    negative_df = df[df['sub_class'] == 'Negative']
 
     vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+    x_combined = vectorizer.fit_transform(df['Review Text'])
 
-    # Perform LDA for the positive subclass
-    X_positive = vectorizer.fit_transform(positive_df['Review Text'])
-    n_topics = 5  # Number of topics
-    n_words = 5  # Number of words per topic
-    lda_positive = LatentDirichletAllocation(n_components=n_topics, random_state=42)
-    lda_positive.fit(X_positive)
-    print(lda_positive)
+    # Fit LDA for positive subclass
+    x_positive = x_combined[positive_df.index]  # Subset for positive subclass
+    lda_positive = LatentDirichletAllocation(n_components=5, random_state=42)
+    lda_positive.fit(x_positive)
 
-    # Perform LDA for the negative subclass
-    X_negative = vectorizer.fit_transform(negative_df['Review Text'])
-    lda_negative = LatentDirichletAllocation(n_components=n_topics, random_state=42)
-    lda_negative.fit(X_negative)
+    # Fit LDA for negative subclass
+    x_negative = x_combined[negative_df.index]  # Subset for negative subclass
+    lda_negative = LatentDirichletAllocation(n_components=5, random_state=42)
+    lda_negative.fit(x_negative)
 
-    # Extract the top n_words per topic for both positive and negative subclasses
+    # Extract the top words per topic for both positive and negative subclasses
     top_words_positive = []
     top_words_negative = []
+
+    n_words = 5  # Number of top words to extract per topic
 
     for topic_idx, topic in enumerate(lda_positive.components_):
         top_n_words_idx = topic.argsort()[-n_words:][::-1]
         top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
         top_words_positive.append(top_words_for_topic)
 
-    print("Top positive words per topic:", top_words_positive)
-
     for topic_idx, topic in enumerate(lda_negative.components_):
         top_n_words_idx = topic.argsort()[-n_words:][::-1]
         top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
         top_words_negative.append(top_words_for_topic)
 
+    # Print top words for positive and negative topics
+    print("Top positive words per topic:", top_words_positive)
     print("Top negative words per topic:", top_words_negative)
 
 def classify_reviews(csv_filepath, stringify=False):
@@ -620,7 +610,7 @@ if __name__ == '__main__':
     #task5('data/London_hotel_reviews.csv')
     #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
-    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv')
+    # determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','able', 'raw_sentiment_scores.db')
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
     pass
 
