@@ -7,14 +7,13 @@ import plotly.express as px
 import plotly.graph_objs as go
 import plotly.tools as tls
 from matplotlib import pyplot as plt
-from scipy import stats, sparse
+from scipy import stats
 from scipy.stats import kurtosis
 from sentistrength import PySentiStr
 from sklearn.decomposition import LatentDirichletAllocation
 from wordcloud import WordCloud
 from sklearn.feature_extraction.text import  CountVectorizer
 import datahandling
-import spacy
 import json
 from empath import Empath
 import nltk
@@ -128,7 +127,7 @@ def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(cs
         std = row['std']
         kurt = row['kurtosis']
 
-        #print(f'Hotel: {hotel_name}, Mean: {mean}, Std: {std}, Kurtosis: {kurt}')
+        print(f'Hotel: {hotel_name}, Mean: {mean}, Std: {std}, Kurtosis: {kurt}')
 
     # threshold to distinguish low and high standard deviations
     std_deviation_threshold = 1.0  # You can adjust this threshold as needed
@@ -148,25 +147,32 @@ def group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis(cs
 def construct_histogram_for_star_categories(csv_filepath):
     df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
 
-    # list to store the proportion of hotels exceeding the threshold for each review rating
-    review_ratings = df['Review Rating'].unique()
-    proportions = []
-    std_deviation_threshold = 1 # You can adjust this threshold as needed
+    # Calculate the standard deviation for each hotel
+    hotel_reviews = df.groupby('Property Name')['Review Rating']
+    std_dev_ratings = hotel_reviews.std()
+    threshold = 1
+    # Create a new DataFrame to store the standard deviation and 'Review Rating'
+    std_dev_df = pd.DataFrame({
+        'Property Name': std_dev_ratings.index,
+        'Standard Deviation': std_dev_ratings.values
+    })
 
-    for rating in review_ratings:
-        subset = df[df['Review Rating'] == rating]
-        #print('subset',subset)
-        std_deviation_subset = subset.groupby('Property Name')['Review Rating'].std()
-        proportion = (std_deviation_subset > std_deviation_threshold).mean()
-        proportions.append(proportion)
+    # Merge the 'std_dev_df' DataFrame with your original DataFrame on 'Property Name'
+    merged_df = df.merge(std_dev_df, on='Property Name')
 
-    # histogram to visualize proportions for each review rating
-    fig = plt.figure(figsize=(5,4))
-    plt.bar(review_ratings, proportions)
-    plt.xlabel("Review Rating")
-    plt.ylabel("Proportion of Hotels with High Standard Deviation")
-    plt.title("Proportion of Hotels with High Standard Deviation by Review Rating")
-    # plt.show()
+    # Group the data by 'Review Rating' category
+    review_rating_groups = merged_df.groupby('Review Rating')
+
+    # Calculate the proportion of 'Ambiguous Class' hotels for each category
+    proportions = review_rating_groups.apply(lambda group: (group['Standard Deviation'] > threshold).mean())
+
+    # histogram to visualize the proportions
+    fig, ax = plt.subplots()
+    proportions.plot(kind='bar', ax=ax)
+    ax.set_xlabel("Review Rating")
+    ax.set_ylabel("Proportion of Ambiguous Class Hotels")
+    ax.set_title("Proportion of Ambiguous Class Hotels by Review Rating")
+    #plt.show()
     return tls.mpl_to_plotly(fig)
 
 # Task 4
@@ -209,7 +215,6 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
 
     # Count the occurrences of each subclass
     subclass_counts = subclass_data['sub_class'].value_counts()
-    print('Subclass!!!!!!!!!!!!!!!!',subclass_counts)
 
     # Plot the histogram
     fig = plt.figure(figsize=(5,4))
@@ -221,7 +226,7 @@ def proportion_of_positive_and_negative_subclass_in_ambiguous_class(csv_filepath
     # Change the matplotlib figure into a Plotly figure and return it
     return tls.mpl_to_plotly(fig)
 
-Task 5
+#Task 5
 def concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used(csv_filepath):
     (positive_reviews_text, negative_reviews_text) = classify_reviews(csv_filepath, stringify=True)
 
@@ -696,14 +701,14 @@ def identify_nouns_for_positive_and_negative_adjectives(csv_filepath):
 if __name__ == '__main__':
     # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
     # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
-    # group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
-    # construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
+    #group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
+    #construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
     #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
-    determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
+    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
-    # pass
+    pass
 
 
