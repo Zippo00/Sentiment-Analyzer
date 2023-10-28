@@ -686,13 +686,8 @@ if __name__ == '__main__':
     #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
     #task5('data/London_hotel_reviews.csv')
     #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
-<<<<<<< Updated upstream
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
     # determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','able', 'raw_sentiment_scores.db')
-=======
-    concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
-    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv')
->>>>>>> Stashed changes
     #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
     pass
 
