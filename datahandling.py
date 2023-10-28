@@ -4,7 +4,7 @@ Functions for SQLite Database management.
 
 import sqlite3
 
-def sql_execute(query, db):
+def sql_execute(query, db, *args):
     '''
     Execute a SQLite Database Query.
     Can be used to create a new table, etc.
@@ -26,7 +26,10 @@ def sql_execute(query, db):
         # Create a cursor object
         sql_cursor = sqlite_connection.cursor()
         # Execute the query
-        sql_cursor.execute(query)
+        if args:
+            sql_cursor.execute(query, args)
+        else:
+            sql_cursor.execute(query)
         sqlite_connection.commit()
         print("SQL Query Executed.")
     except sqlite3.Error as e:
