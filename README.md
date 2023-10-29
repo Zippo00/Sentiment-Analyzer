@@ -2,8 +2,8 @@
 Web application for analyzing business reviews.
 
 ## 1.) How to setup & run
-#### Tested on Windows 10 with Python v3.11.5 & Ubuntu 22.04 with Python v3.10.6 and the following dependency versions:
 ```sh
+Tested on Windows 10 with Python v3.11.5 & Ubuntu 22.04 with Python v3.10.6 and the following dependency versions:
 sentistrength == 0.0.9
 pandas == 2.1.0
 flask == 2.3.3
@@ -17,12 +17,12 @@ scipy == 1.11.2
 scikit-learn == 1.3.0
 genism == 4.3.2
 ```
-Clone the repository to your local machine.\
-Install dependencies with:
+#### Clone the repository to your local machine.\
+#### Install dependencies with:
 ```sh
 pip install -r requirements.txt
 ```
-Run the `main.py` file via commandline:
+#### Run the `main.py` file via commandline:
 ```sh
 python main.py
 ```
@@ -37,7 +37,7 @@ Press CTRL+C to quit
  * Debugger is active!
  * Debugger PIN: 115-732-936
 ```
-Navigate to the address the flask application is running on via a web browser. In the above case, navigate to address: `http://127.0.0.1:5000`
+#### Navigate to the address the flask application is running on via a web browser. In the above case, navigate to address: `http://127.0.0.1:5000`
 
 ## 2.) How to use
 If you managed to do section 1.) without any issues, you should see a web page like this (size of your monitor and the web browser used might affect the aesthetics):\
