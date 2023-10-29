@@ -3,6 +3,7 @@ Web application for analyzing business reviews.
 
 ## 1.) How to setup & run
 > Tested on Windows 10 with Python v3.11.5 & Ubuntu 22.04 with Python v3.10.6 and the following dependency versions:
+
 sentistrength == 0.0.9
 pandas == 2.1.0
 flask == 2.3.3
