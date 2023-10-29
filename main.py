@@ -69,7 +69,13 @@ the overlapping ratios were the following:\n\nRatio of Empath categories overlap
 overlapping between "Brown Reviews Corpus" & "Negative Subclass Reviews": {neg_overlapping_ratio:.2f} %\n\nThe logic used to consider categories to be overlapping: If the normalized weight for the category \
 is over 0.001 in both, brown and positive/negative empaths, the category is considered to be overlapping.'
         elif calculation =='task9':
-            pass
+            pos_overlapping_ratio, neg_overlapping_ratio = backend_functions.task9()
+            result = f'Comparing the Empath Categories generated for the reviews that belong to either "Positive" or "Negative" subclass, and the Empath Categories generated for Negative and Positive LDA Topics determined in Task 6, \
+the overlapping ratios were the following:\n\nRatio of Empath categories overlapping between "Positive LDA Topics" & "Positive Subclass Reviews": {pos_overlapping_ratio:.2f} %\nRatio of Empath categories \
+overlapping between "Negative LDA Topics" & "Negative Subclass Reviews": {neg_overlapping_ratio:.2f} %\n\nThe logic used to consider categories to be overlapping: First, all categories with a weighted value less than 0.1 were removed \
+from the category sets for "Positive Subclass Reviews" and "Negative Subclass Reviews". Then the categories were considered to be overlapping, if the Empath category was found in the Empath category sets of both "Positive/Negative LDA Topics" \
+and "Positive/Negative Subclass Reviews".\n\nNote: The overlapping ratio between "Negative LDA Topics" and "Negative Subclass Reviews" is 0.00%, due to the fact that the words/topics determined by LDA in Task 6 were not English words. Empath Client \
+does not understand languages apart from English, at least at this time.'
         elif calculation =='task12':
             result = "Some of the associations can lead to evaluation errors if taken at face value. For example, is the pair 'cheapest - choice' really always a positive thing?\n\
 Similarly, the adjectives 'adequate' & 'decent' could belong to either class.\n\
