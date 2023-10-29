@@ -262,10 +262,12 @@ def task5_plotly(csv_filepath):
     fig2 = plotly_wordcloud(negative_reviews_text)
     return fig1, fig2
 
-#Task 6 NEW IMPLEMENTATION
-def determine_the_topic_distribution_of_the_positive_and_negative_subclass():
+
+#Task
+def determine_the_topic_distribution_of_the_positive_and_negative_subclass(db):
     '''
     Function to perform Task 6
+    :param db: (str) Name of the .db file to save the results to.
     '''
     def preprocess(text):
         '''
@@ -321,66 +323,14 @@ def determine_the_topic_distribution_of_the_positive_and_negative_subclass():
     print('Starting to preprocess Positive subclass...')
     positive_subclass_reviews = list(map(preprocess, positive_subclass_reviews)) # PREPROCESSED REVIEWS THAT BELONG TO POSITIVE SUBCLASS ARE IN THIS VARIABLE
 
-    #all_preprocessed_reviews = negative_subclass_reviews.extend(positive_subclass_reviews)
-
+    positive_df = pd.DataFrame({'Review Text': positive_subclass_reviews})
+    negative_df = pd.DataFrame({'Review Text': negative_subclass_reviews})
+    preprocessed_df = pd.concat([positive_df, negative_df], ignore_index=True)
+    print(positive_df.head())
+    print(negative_df.head())
+    print(preprocessed_df.head())
     vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
-    pos_vector = vectorizer.fit_transform(positive_subclass_reviews)
-    neg_vector = vectorizer.fit_transform(negative_subclass_reviews)
-
-    # Fit LDA for positive subclass
-    lda_positive = LatentDirichletAllocation(n_components=5, random_state=42)
-    lda_positive.fit(pos_vector)
-
-    # Fit LDA for negative subclass
-    lda_negative = LatentDirichletAllocation(n_components=5, random_state=42)
-    lda_negative.fit(neg_vector)
-
-    # Extract the top words per topic for both positive and negative subclasses
-    top_words_positive = []
-    top_words_negative = []
-
-    n_words = 5  # Number of top words to extract per topic
-
-    for topic_idx, topic in enumerate(lda_positive.components_):
-        top_n_words_idx = topic.argsort()[-n_words:][::-1]
-        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
-        top_words_positive.append(top_words_for_topic)
-
-    for topic_idx, topic in enumerate(lda_negative.components_):
-        top_n_words_idx = topic.argsort()[-n_words:][::-1]
-        top_words_for_topic = [vectorizer.get_feature_names_out()[i] for i in top_n_words_idx]
-        top_words_negative.append(top_words_for_topic)
-
-    # Print top words for positive and negative topics
-    print("Top positive words per topic:", top_words_positive)
-    print("Top negative words per topic:", top_words_negative)
-    #Save the results as json files - *YOU CAN CHANGE THESE TO INSTEAD STORE THE RESULTS IN THE DATABASE
-    with open('data/top_words_positive.json', 'w') as f:
-            json.dump(top_words_positive, f, sort_keys=True, indent=4)
-    with open('data/top_words_negative.json', 'w') as f:
-            json.dump(top_words_negative, f, sort_keys=True, indent=4)
-
-#Task 6 OLD IMPLEMENTATION - 
-def determine_the_topic_distribution_of_the_positive_and_negative_subclass_OLD(csv_filepath, db_table, db):
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    df = pd.read_csv(csv_filepath, encoding="ISO-8859-1")
-    print(df)
-    # preprocess_text is defined in manual_ops (WIP)
-    #df['Review Text'] = df['Review Text'].apply(preprocess_text)
-
-    query = f"""SELECT sub_class, property_name FROM {db_table} WHERE sub_class IS NOT NULL"""
-    subclass_data = datahandling.fetch_data(db_table, db, query)
-    print(subclass_data)
-
-    columns = ['sub_class', 'Property Name']
-
-    df = pd.merge(df, pd.DataFrame(subclass_data, columns=columns), on='Property Name', how='left')
-    positive_df = df[df['sub_class'] == 'Positive']
-    negative_df = df[df['sub_class'] == 'Negative']
-
-    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
-    x_combined = vectorizer.fit_transform(df['Review Text'])
+    x_combined = vectorizer.fit_transform(preprocessed_df['Review Text'])
 
     # Fit LDA for positive subclass
     x_positive = x_combined[positive_df.index]  # Subset for positive subclass
@@ -388,7 +338,7 @@ def determine_the_topic_distribution_of_the_positive_and_negative_subclass_OLD(c
     lda_positive.fit(x_positive)
 
     # Fit LDA for negative subclass
-    x_negative = x_combined[negative_df.index]  # Subset for negative subclass
+    x_negative = x_combined[1250:]  # Subset for negative subclass
     lda_negative = LatentDirichletAllocation(n_components=5, random_state=42)
     lda_negative.fit(x_negative)
 
@@ -411,7 +361,6 @@ def determine_the_topic_distribution_of_the_positive_and_negative_subclass_OLD(c
     # Print top words for positive and negative topics
     print("Top positive words per topic:", top_words_positive)
     print("Top negative words per topic:", top_words_negative)
-
     query_to_create_top_words_positive_table = f"""CREATE TABLE IF NOT EXISTS top_words_positive (topic_id INTEGER PRIMARY KEY,words TEXT)"""
     query_to_create_top_words_negative_table = f"""CREATE TABLE IF NOT EXISTS top_words_negative (topic_id INTEGER PRIMARY KEY,words TEXT)"""
     datahandling.sql_execute(query_to_create_top_words_positive_table, db)
