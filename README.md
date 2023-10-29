@@ -2,10 +2,10 @@
 Web application for analyzing business reviews.
 
 ## 1.) How to setup & run
-```sh
-Tested on Windows 10 with Python v3.11.5 & Ubuntu 22.04 with Python v3.10.6 and the following dependency versions:
-sentistrength == 0.0.9
-pandas == 2.1.0
+> Tested on Windows 10 with Python v3.11.5 & Ubuntu 22.04 with Python v3.10.6 and the following dependency versions:
+
+> sentistrength == 0.0.9
+> pandas == 2.1.0
 flask == 2.3.3
 turbo_flask == 0.8.4
 plotly == 5.16.1
@@ -16,7 +16,7 @@ empath == 0.89
 scipy == 1.11.2
 scikit-learn == 1.3.0
 genism == 4.3.2
-```
+
 #### Clone the repository to your local machine.\
 #### Install dependencies with:
 ```sh
