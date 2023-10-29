@@ -167,11 +167,11 @@ def construct_histogram_for_star_categories(csv_filepath):
     proportions = review_rating_groups.apply(lambda group: (group['Standard Deviation'] > threshold).mean())
 
     # histogram to visualize the proportions
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5,4))
     proportions.plot(kind='bar', ax=ax)
     ax.set_xlabel("Review Rating")
     ax.set_ylabel("Proportion of Ambiguous Class Hotels")
-    ax.set_title("Proportion of Ambiguous Class Hotels by Review Rating")
+    ax.set_title("Proportion of Ambiguous Class Hotels by Review Rating", fontsize=7)
     #plt.show()
     return tls.mpl_to_plotly(fig)
 
@@ -263,7 +263,7 @@ def task5_plotly(csv_filepath):
     return fig1, fig2
 
 
-#Task
+#Task 6
 def determine_the_topic_distribution_of_the_positive_and_negative_subclass(db):
     '''
     Function to perform Task 6
@@ -522,6 +522,109 @@ def task8():
     neg_overlap_ratio = neg_overlaps / len(neg_empaths) * 100
     print(f'Ratio of Empath categories overlapping between "Brown Reviews Corpus" & "Positive Subclass Reviews": {pos_overlap_ratio:.2f} %\
         \nRatio of Empath categories overlapping between "Brown Reviews Corpus" & "Negative Subclass Reviews": {neg_overlap_ratio:.2f} %')
+    return pos_overlap_ratio, neg_overlap_ratio
+
+#Task 9 Function
+def task9():
+    '''
+    Generates the Empath categories for LDA topics determined in Task 6.
+    Compares the generated Empath categories to Empath categories generated in Task7.
+    '''
+    def save_lda_empaths():
+        '''
+        Generates Empath categories for the LDA topics determined 
+        in Task 6, removes any categories with a value of zero, and 
+        stores the results into a json file in the 'data'-folder.
+        '''
+        lexicon = Empath()
+        lda_pos_tuples = datahandling.fetch_data('top_words_positive', 'D1.db')
+        lda_neg_tuples = datahandling.fetch_data('top_words_negative', 'D1.db')
+        lda_pos = []
+        lda_neg = []
+        #Remove index numbers from the tuples
+        for topic in lda_pos_tuples:
+            for index, word in enumerate(topic):
+                if index != 0:
+                    lda_pos.append(word)
+        for topic in lda_neg_tuples:
+            for index, word in enumerate(topic):
+                if index != 0:
+                    lda_neg.append(word)
+        #Generate Empath categories
+        lda_pos_empath_cats = lexicon.analyze(lda_pos, normalize=True)
+        lda_neg_empath_cats = lexicon.analyze(lda_neg, normalize=True)
+        # Remove any categories with a zero value from positive empaths
+        to_remove=[]
+        for i in lda_pos_empath_cats.items():
+            if i[1] == 0.0:
+                to_remove.append(i[0])
+        for i in to_remove:
+            lda_pos_empath_cats.pop(i)
+        # Remove any categories with a zero value from negative empaths
+        to_remove=[]
+        for i in lda_neg_empath_cats.items():
+            if i[1] == 0.0:
+                to_remove.append(i[0])
+        for i in to_remove:
+            lda_neg_empath_cats.pop(i)
+        # Store results as json files
+        with open('data/lda_pos_empath_cats.json', 'w') as f:
+            json.dump(lda_pos_empath_cats, f, sort_keys=True, indent=4)
+        with open('data/lda_neg_empath_cats.json', 'w') as f:
+            json.dump(lda_neg_empath_cats, f, sort_keys=True, indent=4)
+    # Try to get the empath cats for LDA topics
+    try:
+        with open('data/lda_pos_empath_cats.json', 'r') as f:
+            lda_pos_empaths = json.load(f)
+        with open('data/lda_neg_empath_cats.json', 'r') as f:
+            lda_neg_empaths = json.load(f)
+    # Generate them if file not found
+    except FileNotFoundError:
+        save_lda_empaths()
+        with open('data/lda_pos_empath_cats.json', 'r') as f:
+            lda_pos_empaths = json.load(f)
+        with open('data/lda_neg_empath_cats.json', 'r') as f:
+            lda_neg_empaths = json.load(f)
+    # Get the empath cats for 'Positive' & 'Negative' subclasses
+    with open('data/neg_subclass_empath_cats.json', 'r') as f:
+        neg_empaths = json.load(f)
+    with open('data/pos_subclass_empath_cats.json', 'r') as f:
+        pos_empaths = json.load(f)
+    # Remove any categories with a value<0.1 from positive empaths
+        to_remove=[]
+        for i in pos_empaths.items():
+            if i[1] < 0.01:
+                to_remove.append(i[0])
+        for i in to_remove:
+            pos_empaths.pop(i)
+        # Remove any categories with a value<0.1 from negative empaths
+        to_remove=[]
+        for i in neg_empaths.items():
+            if i[1] < 0.01:
+                to_remove.append(i[0])
+        for i in to_remove:
+            neg_empaths.pop(i)
+    # Calculate the overlapping ratio between empath categories of 'Positive' & 'Negative'
+    # subclasses and LDA Words
+    pos_overlaps = 0
+    pos_overlap_cats = []
+    neg_overlaps = 0
+    neg_overlap_cats = []
+    # Logic for overlapping: If the category is found in both category sets,
+    # the categories are considered to be overlapping.
+    for empath in lda_pos_empaths.keys():
+        if empath in pos_empaths:
+            pos_overlaps += 1
+            pos_overlap_cats.append(empath)
+    for empath in lda_neg_empaths.keys():
+        if empath in neg_empaths:
+            neg_overlaps += 1
+            neg_overlap_cats.append(empath)
+
+    pos_overlap_ratio = pos_overlaps / len(pos_empaths) * 100
+    neg_overlap_ratio = neg_overlaps / len(neg_empaths) * 100
+    print(f'Ratio of Empath categories overlapping between "LDA Positive Topics" & "Positive Subclass Reviews": {pos_overlap_ratio:.2f} %\
+        \nRatio of Empath categories overlapping between "LDA Negative Topics" & "Negative Subclass Reviews": {neg_overlap_ratio:.2f} %')
     return pos_overlap_ratio, neg_overlap_ratio
 
 # Task 11
