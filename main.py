@@ -56,12 +56,13 @@ def calculate():
     if dataset == 'hotel_reviews':
         if calculation =='task2':
             pearson = backend_functions.correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
-            result = f"Pearson's Correlation Coefficient for the selected dataset is: {pearson[0]:.3f}"
+            result = f"Pearson's Correlation Coefficient for the sentiment scores and user's ratings of the selected dataset is: {pearson[0]:.3f}"
         elif calculation =='task3':
              result = "Based on the calculated mean, standard deviation & kurtosis for the selected dataset:\n-Hotels with Low Standard Deviation tend to have relatively consistent ratings.\n\
 -Hotels with High Standard Deviation tend to have more variable ratings."
         elif calculation =='task6':
-            pass
+            result = "A comparitively analysis on the results of LDA output with those generated from WordCloud indicate a substantial overlap between the high frequency words in the WordCloud and the \
+top five words per topic in the positive and negative subclasses determined by LDA."
         elif calculation =='task8':
             pos_overlapping_ratio, neg_overlapping_ratio = backend_functions.task8()
             result = f'Comparing the Empath Categories generated for the reviews that belong to either "Positive" or "Negative" subclass, and the Empath Categories generated for Brown Reviews Corpus, \
