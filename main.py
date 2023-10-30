@@ -1,3 +1,6 @@
+'''
+This file contains the flask application.
+'''
 from flask import Flask, render_template, request
 from turbo_flask import Turbo
 import backend_functions
