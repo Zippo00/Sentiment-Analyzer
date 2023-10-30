@@ -1,5 +1,7 @@
 '''
-Functions for Review Sentiment Analyzer
+Functions for Review Sentiment Analyzer.
+
+This file contains all of the functions, that complete the tasks described in project details - apart from the user interface. 
 '''
 import operator
 import pandas as pd
