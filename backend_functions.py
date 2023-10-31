@@ -821,7 +821,7 @@ def identify_nouns_for_positive_and_negative_adjectives(csv_filepath):
     nouns_to_adjectives_positive = map_nouns_to_lexicon(tokenized_sentences_pos, lexicon_words_pos)
     nouns_to_adjectives_negative = map_nouns_to_lexicon(tokenized_sentences_neg, lexicon_words_neg)
 
-    db_name = 'task12.db'
+    db_name = 'D1.db'
     def store(data, table):
         datahandling.sql_execute(f"DROP TABLE IF EXISTS {table}", db_name)
         datahandling.sql_execute(f"""
@@ -863,7 +863,7 @@ if __name__ == '__main__':
     #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
     #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
-    #identify_nouns_for_positive_and_negative_adjectives_in_ambiguous_class('data/London_hotel_reviews.csv')
+    #identify_nouns_for_positive_and_negative_adjectives('data/London_hotel_reviews.csv')
     pass
 
 
