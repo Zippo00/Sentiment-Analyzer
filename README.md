@@ -15,7 +15,7 @@ nltk == 3.8.1
 empath == 0.89
 scipy == 1.11.2
 scikit-learn == 1.3.0
-genism == 4.3.2
+gensim == 4.3.2
 ```
 ---
 
