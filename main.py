@@ -58,8 +58,8 @@ def calculate():
     calculation = request.form.get('calculation')
     if dataset == 'hotel_reviews':
         if calculation =='task2':
-            pearson = backend_functions.correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
-            result = f"Pearson's Correlation Coefficient for the sentiment scores and user's ratings of the selected dataset is: {pearson[0]:.3f}"
+            pearson = backend_functions.correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'D1.db')
+            result = f"Pearson's Correlation Coefficient for the sentiment scores and users' ratings of the selected dataset is: {pearson[0]:.3f}"
         elif calculation =='task3':
              result = "Based on the calculated mean, standard deviation & kurtosis for the selected dataset:\n-Hotels with Low Standard Deviation tend to have relatively consistent ratings.\n\
 -Hotels with High Standard Deviation tend to have more variable ratings."

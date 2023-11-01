@@ -854,15 +854,14 @@ def identify_nouns_for_positive_and_negative_adjectives(csv_filepath):
     return (data_pos, data_neg)
 
 if __name__ == '__main__':
-    # store_sent_score('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db') # I used this line to calculate and store all of the sentiment scores into raw_sentiment_scores.db database.
-    # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'raw_sentiment_scores.db')
+    # correlation_coefficient('data/London_hotel_reviews.csv', 'raw_sentiment_scores', 'D1.db')
     #group_reviews_by_hotel_and_calculate_mean_standard_deviation_and_kurtosis('data/London_hotel_reviews.csv')
     #construct_histogram_for_star_categories('data/London_hotel_reviews.csv')
-    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
+    #proportion_of_positive_and_negative_subclass_in_ambiguous_class('data/London_hotel_reviews.csv','subclass_table', 'D1.db')
     #task5('data/London_hotel_reviews.csv')
     #occurrence_of_positive_and_negative_words('data/London_hotel_reviews.csv')
     #concatenate_all_reviews_of_each_subclass_and_use_wordCloud_to_highlight_the_most_frequent_wording_used('data/London_hotel_reviews.csv')
-    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','subclass_table', 'raw_sentiment_scores.db')
+    #determine_the_topic_distribution_of_the_positive_and_negative_subclass('data/London_hotel_reviews.csv','subclass_table', 'D1.db')
     #identify_nouns_for_positive_and_negative_adjectives('data/London_hotel_reviews.csv')
     pass
 
